@@ -35,6 +35,15 @@ function renderDetail(t) {
     ? t.where.map(([name, color]) => `<div class="platform"><span class="dot" style="background:${color}"></span>${name}</div>`).join("")
     : `<div class="empty-state" style="padding:8px 0;">Não encontramos este título em nenhum streaming no Brasil no momento.</div>`;
 
+  // Atribuição obrigatória: dados de "onde assistir" vêm da parceria TMDb + JustWatch
+  // (exigência dos termos da API do TMDb — ver assets/js/tmdb.js).
+  const whereAttribution = `
+    <p class="where-attribution">
+      Disponibilidade fornecida por <strong>JustWatch</strong> via TMDb.
+      ${t.whereLink ? `<a href="${t.whereLink}" target="_blank" rel="noopener">Ver todas as opções ↗</a>` : ""}
+    </p>
+  `;
+
   const crewHtml = (t.cast || []).map(([name, role]) => `
     <div class="crew-card">
       <div class="av">${initials(name)}</div>
@@ -49,6 +58,7 @@ function renderDetail(t) {
     <div class="ratings-row">${ratingsHtml}</div>
     <div class="block-title">Onde assistir</div>
     <div class="where-row">${whereHtml}</div>
+    ${whereAttribution}
     <p class="synopsis">${t.synopsis || "Sinopse não disponível."}</p>
     <div class="block-title">Elenco e equipe</div>
     <div class="crew-scroll">${crewHtml || "<span class='empty-state'>Sem informações de elenco.</span>"}</div>
