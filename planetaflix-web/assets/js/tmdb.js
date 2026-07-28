@@ -45,6 +45,9 @@ async function tmdbTitleDetails(mediaType, id) {
   const flatrate = providers.flatrate || [];
   const rent = providers.rent || [];
   const where = (flatrate.length ? flatrate : rent).map(p => [p.provider_name, "#1e858d"]);
+  // Link para a página de disponibilidade no TMDb (fonte dos dados: parceria TMDb + JustWatch).
+  // Atribuição ao JustWatch é exigida pelos termos da API — ver seção "Onde assistir" em titulo.js.
+  const whereLink = providers.link || null;
 
   const crew = (data.credits && data.credits.crew || []).filter(c => ["Director", "Screenplay", "Writer"].includes(c.job)).slice(0, 3);
   const cast = (data.credits && data.credits.cast || []).slice(0, 6);
@@ -65,6 +68,7 @@ async function tmdbTitleDetails(mediaType, id) {
     backdrop: data.backdrop_path ? TMDB_IMG_BASE.replace("w500", "w1280") + data.backdrop_path : null,
     synopsis: data.overview || "Sinopse não disponível.",
     where,
+    whereLink,
     cast: combined,
     imdbId: data.external_ids ? data.external_ids.imdb_id : null,
     // Letterboxd usa majoritariamente o título original (em inglês) no slug —
