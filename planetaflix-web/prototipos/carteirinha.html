@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Planeta Flix — Protótipo da Carteirinha de Cinéfilo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --turquesa:#1e858d;
+    --turquesa-dark:#146066;
+    --verde-escuro:#1b4c4a;
+    --dourado:#b9b091;
+    --texto:#1c2b2a;
+    --muted:#6b7a79;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(135deg,#e9f4f4,#f6f3ea);
+    color:var(--texto);
+    display:flex; flex-direction:column; align-items:center;
+    padding:24px 12px 60px;
+  }
+  .intro{max-width:920px;text-align:center;margin-bottom:18px;}
+  .intro h1{color:var(--verde-escuro);margin-bottom:4px;font-size:22px;}
+  .intro p{color:var(--muted);font-size:13.5px;margin:2px 0;}
+  .badge-fase{display:inline-block;background:var(--turquesa);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.03em;margin-bottom:10px;}
+
+  .app-frame{
+    width:100%; max-width:420px; background:#fff; border-radius:28px;
+    box-shadow:0 30px 60px rgba(20,50,50,.25); overflow:hidden;
+    border:8px solid #0c1f1e; min-height:660px; display:flex; flex-direction:column;
+  }
+  .app-header{
+    background:linear-gradient(120deg,var(--turquesa),var(--verde-escuro));
+    color:#fff; padding:14px 18px; display:flex; align-items:center; gap:10px;
+  }
+  .logo-tv{width:30px;height:22px;flex-shrink:0;}
+  .app-header .brand{font-weight:800; font-size:16px; letter-spacing:.02em;}
+  .app-header .brand span{color:var(--dourado);}
+  .app-header .back{margin-left:auto;background:rgba(255,255,255,.18);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;}
+
+  .screen{display:none; flex:1; padding:20px 22px; flex-direction:column;}
+  .screen.active{display:flex;}
+
+  .page-title{font-size:16px;font-weight:800;color:var(--verde-escuro);text-align:center;margin:2px 0 4px;}
+  .page-sub{font-size:11.5px;color:var(--muted);text-align:center;margin-bottom:18px;}
+
+  /* --- Cartão flip --- */
+  .flip-wrap{perspective:1200px;width:100%;aspect-ratio:1.586/1;margin-bottom:16px;cursor:pointer;}
+  .flip-inner{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;}
+  .flip-wrap.flipped .flip-inner{transform:rotateY(180deg);}
+  .face{position:absolute;inset:0;border-radius:16px;backface-visibility:hidden;overflow:hidden;box-shadow:0 14px 30px rgba(20,50,50,.28);}
+  .face-front{
+    background:linear-gradient(135deg,var(--verde-escuro) 0%, var(--turquesa) 70%);
+    color:#fff; padding:16px 18px; display:flex; flex-direction:column;
+  }
+  .face-front .top-row{display:flex;align-items:center;justify-content:space-between;}
+  .face-front .brandmini{font-weight:800;font-size:13px;letter-spacing:.03em;}
+  .face-front .brandmini span{color:var(--dourado);}
+  .face-front .tier{font-size:9px;font-weight:800;letter-spacing:.06em;background:rgba(255,255,255,.18);padding:3px 8px;border-radius:10px;}
+  .face-front .mid{display:flex;align-items:center;gap:12px;margin-top:auto;}
+  .face-front .av{width:46px;height:46px;border-radius:50%;background:var(--dourado);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--verde-escuro);font-size:17px;flex-shrink:0;}
+  .face-front .name{font-size:15px;font-weight:800;}
+  .face-front .since{font-size:9.5px;opacity:.85;margin-top:1px;}
+  .face-front .bottom-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;}
+  .face-front .stat{font-size:9px;text-transform:uppercase;letter-spacing:.04em;opacity:.8;}
+  .face-front .stat b{display:block;font-size:13px;font-weight:800;opacity:1;}
+  .face-front .member-no{font-size:9.5px;opacity:.75;letter-spacing:.06em;}
+  .face-back{
+    background:linear-gradient(135deg,#12302f,var(--verde-escuro));
+    color:#fff; transform:rotateY(180deg); padding:16px 18px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  }
+  .qr{width:92px;height:92px;background:#fff;border-radius:8px;padding:6px;}
+  .face-back .code-txt{font-size:9.5px;letter-spacing:.15em;opacity:.8;font-family:monospace;}
+  .face-back .hint{font-size:9px;opacity:.6;text-align:center;max-width:220px;}
+
+  .flip-hint{text-align:center;font-size:10.5px;color:var(--muted);margin-bottom:18px;}
+
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+  .stat-card{background:#f6f9f8;border-radius:12px;padding:12px;text-align:center;}
+  .stat-card .n{font-size:19px;font-weight:800;color:var(--verde-escuro);}
+  .stat-card .l{font-size:10px;color:var(--muted);margin-top:2px;}
+
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    border-radius:14px;padding:13px 16px;font-weight:700;font-size:13.5px;cursor:pointer;
+    border:none; margin-bottom:10px;
+  }
+  .btn-wallet{background:#111;color:#fff;}
+  .btn-share{background:var(--turquesa);color:#fff;box-shadow:0 6px 16px rgba(30,133,141,.3);}
+  .btn-ghost{background:none;color:var(--muted);text-decoration:underline;text-underline-offset:3px;font-weight:600;}
+
+  /* --- share preview (formato story) --- */
+  .story-frame{
+    width:100%; aspect-ratio:9/16; border-radius:22px; overflow:hidden; position:relative;
+    background:linear-gradient(160deg,var(--verde-escuro),#0c1f1e); box-shadow:0 14px 30px rgba(20,50,50,.3);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; margin-bottom:16px;
+  }
+  .story-frame .card-mini{width:78%;aspect-ratio:1.586/1;border-radius:14px;background:linear-gradient(135deg,var(--verde-escuro),var(--turquesa));box-shadow:0 10px 24px rgba(0,0,0,.35);padding:12px 14px;color:#fff;display:flex;flex-direction:column;}
+  .story-frame .card-mini .b{font-size:10px;font-weight:800;}
+  .story-frame .card-mini .b span{color:var(--dourado);}
+  .story-frame .card-mini .n{font-size:12px;font-weight:800;margin-top:auto;}
+  .story-frame .card-mini .s{font-size:8px;opacity:.8;}
+  .story-frame .caption{color:#fff;text-align:center;margin-top:16px;font-size:12px;font-weight:700;}
+  .story-frame .caption span{display:block;font-size:10px;font-weight:500;opacity:.75;margin-top:4px;}
+  .story-ui{position:absolute;top:10px;left:14px;right:14px;height:3px;background:rgba(255,255,255,.25);border-radius:2px;}
+  .story-ui::after{content:"";position:absolute;left:0;top:0;bottom:0;width:60%;background:#fff;border-radius:2px;}
+
+  .legend{max-width:420px;margin-top:18px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6;}
+  .legend b{color:var(--verde-escuro);}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="badge-fase">FASE 2 · CARTEIRINHA DE CINÉFILO — PROTÓTIPO NAVEGÁVEL</div>
+  <h1>Planeta Flix</h1>
+  <p>Clique no cartão para virar (frente/verso). Use os botões para simular "Adicionar ao Wallet" e "Compartilhar" — o compartilhamento é pensado para gerar buzz nos Stories.</p>
+</div>
+
+<div class="app-frame">
+  <div class="app-header">
+    <svg class="logo-tv" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+      <line x1="16" y1="4" x2="26" y2="16" stroke="#b9b091" stroke-width="3" stroke-linecap="round"/>
+      <line x1="48" y1="4" x2="38" y2="16" stroke="#b9b091" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="16" cy="4" r="3" fill="#b9b091"/>
+      <circle cx="48" cy="4" r="3" fill="#b9b091"/>
+      <rect x="4" y="14" width="56" height="30" rx="10" fill="#ffffff" fill-opacity="0.15"/>
+      <rect x="10" y="19" width="34" height="20" rx="4" fill="#ffffff"/>
+    </svg>
+    <div class="brand">PLANETA <span>FLIX</span></div>
+    <button class="back" style="display:none;" id="backBtn" onclick="goScreen('card')">‹</button>
+  </div>
+
+  <!-- SCREEN: CARTEIRINHA -->
+  <div class="screen active" id="screen-card">
+    <div class="page-title">Minha Carteirinha</div>
+    <div class="page-sub">Toque no cartão para ver o QR de verificação</div>
+
+    <div class="flip-wrap" id="flipCard" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="face face-front">
+          <div class="top-row">
+            <div class="brandmini">PLANETA <span>FLIX</span></div>
+            <div class="tier">CINÉFILO</div>
+          </div>
+          <div class="mid">
+            <div class="av">RF</div>
+            <div>
+              <div class="name">Ricardo Freitas</div>
+              <div class="since">Sócio desde jul/2026</div>
+            </div>
+          </div>
+          <div class="bottom-row">
+            <div class="stat">Gênero favorito<b>Ficção científica</b></div>
+            <div class="member-no">Nº 000042</div>
+          </div>
+        </div>
+        <div class="face face-back">
+          <div class="qr">
+            <svg viewBox="0 0 100 100" width="100%" height="100%"><rect width="100" height="100" fill="#fff"/><g fill="#12302f"><rect x="6" y="6" width="24" height="24"/><rect x="70" y="6" width="24" height="24"/><rect x="6" y="70" width="24" height="24"/><rect x="12" y="12" width="12" height="12" fill="#fff"/><rect x="76" y="12" width="12" height="12" fill="#fff"/><rect x="12" y="76" width="12" height="12" fill="#fff"/><rect x="40" y="6" width="6" height="6"/><rect x="54" y="6" width="6" height="6"/><rect x="40" y="20" width="6" height="6"/><rect x="60" y="40" width="6" height="6"/><rect x="40" y="40" width="6" height="6"/><rect x="48" y="48" width="6" height="6"/><rect x="60" y="60" width="6" height="6"/><rect x="40" y="60" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/><rect x="40" y="82" width="6" height="6"/><rect x="54" y="70" width="6" height="6"/></g></svg>
+          </div>
+          <div class="code-txt">PF-000042-BR</div>
+          <div class="hint">QR de verificação — uso ilustrativo neste protótipo (validação real integraria com o backend de perfil).</div>
+        </div>
+      </div>
+    </div>
+    <div class="flip-hint">👆 toque no cartão</div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="n">127</div><div class="l">Títulos avaliados</div></div>
+      <div class="stat-card"><div class="n">18</div><div class="l">Sequência de dias</div></div>
+    </div>
+
+    <div class="btn btn-wallet" onclick="alert('Mock: abriria o fluxo real de \'Salvar no Google Wallet\' (Google Wallet API) — item B21 do backlog.')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      Adicionar ao Google Wallet
+    </div>
+    <div class="btn btn-share" onclick="goScreen('share')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+      Compartilhar carteirinha
+    </div>
+  </div>
+
+  <!-- SCREEN: SHARE PREVIEW (formato Stories) -->
+  <div class="screen" id="screen-share">
+    <div class="page-title">Pré-visualização</div>
+    <div class="page-sub">Formato pensado para Stories do Instagram/WhatsApp — gera buzz orgânico fora do app</div>
+    <div class="story-frame">
+      <div class="story-ui"></div>
+      <div class="card-mini">
+        <div class="b">PLANETA <span>FLIX</span></div>
+        <div class="n">Ricardo Freitas</div>
+        <div class="s">Sócio desde jul/2026 · Nº 000042</div>
+      </div>
+      <div class="caption">Já sou cinéfilo no Planeta Flix 🎬<span>planetaflix.com.br</span></div>
+    </div>
+    <div class="btn btn-share" onclick="alert('Mock: abriria o share sheet nativo (Instagram Stories, WhatsApp, etc.) com a imagem da carteirinha e link com UTM de indicação.')">Compartilhar agora</div>
+    <div class="btn btn-ghost" onclick="goScreen('card')">Voltar para a carteirinha</div>
+  </div>
+</div>
+
+<div class="legend">
+  <b>O que este protótipo cobre:</b> visualização da carteirinha (frente/verso com QR), estatísticas de destaque, e o fluxo de compartilhamento em formato Stories — pensado para gerar buzz orgânico, conforme a diretriz de produto. Conecta com o item B21 do backlog (Carteirinha de cinéfilo — Google Wallet).
+</div>
+
+<script>
+function goScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('backBtn').style.display = name==='card' ? 'none' : 'flex';
+  document.getElementById('backBtn').style.alignItems = 'center';
+  document.getElementById('backBtn').style.justifyContent = 'center';
+}
+</script>
+
+</body>
+</html>
