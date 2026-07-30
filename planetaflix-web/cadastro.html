@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Entrar — Planeta Flix</title>
+<meta name="description" content="Entre com sua conta Google para criar sua carteirinha de cinéfilo no Planeta Flix.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poetsen+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .auth-wrap{max-width:420px;margin:0 auto;padding:40px 20px 60px;}
+  .auth-card{background:#fff;border-radius:var(--radius);padding:32px 26px;box-shadow:0 6px 20px rgba(20,50,50,.1);text-align:center;}
+  .auth-card h1{font-size:22px;color:var(--verde-escuro);margin:0 0 8px;}
+  .auth-card p{color:var(--muted);font-size:13.5px;line-height:1.55;margin:0 0 24px;}
+  .google-btn{
+    display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+    background:#fff;border:1px solid #dadce0;border-radius:8px;padding:12px 18px;
+    font-size:14.5px;font-weight:700;color:#3c4043;cursor:pointer;transition:box-shadow .15s ease;
+  }
+  .google-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.12);}
+  .google-btn:disabled{opacity:.6;cursor:default;}
+  .auth-note{font-size:11.5px;color:var(--muted);margin-top:18px;line-height:1.5;}
+  .step{display:none;}
+  .step.active{display:block;}
+  .chip-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0 6px;}
+  .chip{
+    border:1.5px solid #dfe7e6;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;
+    cursor:pointer;background:#fff;color:var(--texto);transition:all .12s ease;
+  }
+  .chip.selected{background:var(--turquesa);border-color:var(--turquesa);color:#fff;}
+  .avatar-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0 6px;}
+  .avatar-opt{
+    width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:24px;border:2px solid #dfe7e6;cursor:pointer;background:#fff;
+  }
+  .avatar-opt.selected{border-color:var(--turquesa);background:#e7f4f3;}
+  .field-label{font-size:12px;font-weight:800;color:var(--verde-escuro);text-transform:uppercase;letter-spacing:.04em;margin:20px 0 4px;text-align:left;}
+  .primary-btn{
+    width:100%;background:var(--turquesa);color:#fff;border:none;border-radius:24px;
+    padding:12px 18px;font-weight:700;font-size:14.5px;cursor:pointer;margin-top:22px;
+  }
+  .primary-btn:hover{background:var(--turquesa-dark);}
+  .primary-btn:disabled{opacity:.5;cursor:default;}
+  .user-chip{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:14px;}
+  .user-chip img{width:40px;height:40px;border-radius:50%;}
+  .success-emoji{font-size:44px;margin-bottom:10px;}
+  .link-btn{display:inline-block;margin-top:14px;font-size:13px;color:var(--turquesa);font-weight:700;}
+  .error-msg{background:#fdecea;color:#a33;border-radius:8px;padding:10px 14px;font-size:12.5px;margin-top:14px;display:none;}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="brand-row">
+    <svg class="logo-tv" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+      <line x1="16" y1="4" x2="26" y2="16" stroke="#b9b091" stroke-width="3" stroke-linecap="round"/>
+      <line x1="48" y1="4" x2="38" y2="16" stroke="#b9b091" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="16" cy="4" r="3" fill="#b9b091"/>
+      <circle cx="48" cy="4" r="3" fill="#b9b091"/>
+      <rect x="4" y="14" width="56" height="30" rx="10" fill="#ffffff" fill-opacity="0.15"/>
+      <rect x="10" y="19" width="34" height="20" rx="4" fill="#ffffff"/>
+    </svg>
+    <span class="brand brand-font">PLANETA <span>FLIX</span></span>
+  </a>
+  <nav>
+    <a href="app.html">‹ Página inicial</a>
+  </nav>
+</header>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <!-- Passo 1: login -->
+    <div class="step active" id="step-login">
+      <h1 class="brand-font">Entre para o Planeta Flix</h1>
+      <p>Faça login com sua conta Google para criar sua carteirinha de cinéfilo e salvar seus gêneros favoritos.</p>
+      <button class="google-btn" id="btn-google">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16 18.9 12 24 12c3.1 0 5.8 1.1 8 3l6-6C34.5 6 29.5 4 24 4c-7.4 0-13.8 4.1-17.7 10.1z"/><path fill="#4CAF50" d="M24 44c5.3 0 10.1-2 13.7-5.4l-6.3-5.3c-2.1 1.5-4.8 2.6-7.5 2.6-5.3 0-9.7-3.3-11.4-8l-6.6 5.1C9.9 39.6 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C40.9 36.5 44 30.9 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+        Continuar com Google
+      </button>
+      <div class="error-msg" id="login-error"></div>
+      <p class="auth-note">Ao continuar, você concorda com o uso do seu nome e foto de perfil do Google para montar sua carteirinha de cinéfilo. Não publicamos nada na sua conta Google.</p>
+    </div>
+
+    <!-- Passo 2: onboarding (só usuário novo) -->
+    <div class="step" id="step-onboarding">
+      <div class="user-chip">
+        <img id="onboarding-photo" src="" alt="">
+        <strong id="onboarding-name"></strong>
+      </div>
+      <h1 class="brand-font">Complete seu perfil</h1>
+      <p>Escolha um avatar e seus gêneros favoritos para personalizar sua carteirinha.</p>
+
+      <div class="field-label">Avatar</div>
+      <div class="avatar-grid" id="avatar-grid"></div>
+
+      <div class="field-label">Gêneros favoritos</div>
+      <div class="chip-grid" id="genero-grid"></div>
+
+      <button class="primary-btn" id="btn-salvar-perfil" disabled>Salvar e continuar</button>
+    </div>
+
+    <!-- Passo 3: sucesso -->
+    <div class="step" id="step-sucesso">
+      <div class="success-emoji">🎉</div>
+      <h1 class="brand-font">Perfil pronto!</h1>
+      <p>Sua carteirinha de cinéfilo já foi gerada.</p>
+      <a class="primary-btn" href="carteirinha.html" style="display:block;text-decoration:none;">Ver minha carteirinha →</a>
+    </div>
+
+    <!-- Carregando -->
+    <div class="step" id="step-loading">
+      <p>Carregando…</p>
+    </div>
+
+  </div>
+</div>
+
+<footer>Planeta Flix · MVL de Curadoria · Fase 1 de 3 (Curadoria → Analítica → Locadora)</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+(function () {
+  const stepLogin = document.getElementById("step-login");
+  const stepOnboarding = document.getElementById("step-onboarding");
+  const stepSucesso = document.getElementById("step-sucesso");
+  const stepLoading = document.getElementById("step-loading");
+
+  function showStep(el) {
+    [stepLogin, stepOnboarding, stepSucesso, stepLoading].forEach((s) => s.classList.remove("active"));
+    el.classList.add("active");
+  }
+
+  let avatarEscolhido = null;
+  const generosEscolhidos = new Set();
+
+  const avatarGrid = document.getElementById("avatar-grid");
+  AVATARES_DISPONIVEIS.forEach((av) => {
+    const btn = document.createElement("div");
+    btn.className = "avatar-opt";
+    btn.textContent = av;
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".avatar-opt").forEach((n) => n.classList.remove("selected"));
+      btn.classList.add("selected");
+      avatarEscolhido = av;
+      atualizarBotaoSalvar();
+    });
+    avatarGrid.appendChild(btn);
+  });
+
+  const generoGrid = document.getElementById("genero-grid");
+  GENEROS_DISPONIVEIS.forEach((g) => {
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.textContent = g;
+    chip.addEventListener("click", () => {
+      chip.classList.toggle("selected");
+      if (generosEscolhidos.has(g)) generosEscolhidos.delete(g);
+      else generosEscolhidos.add(g);
+      atualizarBotaoSalvar();
+    });
+    generoGrid.appendChild(chip);
+  });
+
+  const btnSalvar = document.getElementById("btn-salvar-perfil");
+  function atualizarBotaoSalvar() {
+    btnSalvar.disabled = !(avatarEscolhido && generosEscolhidos.size > 0);
+  }
+
+  document.getElementById("btn-google").addEventListener("click", async () => {
+    const errorBox = document.getElementById("login-error");
+    errorBox.style.display = "none";
+    try {
+      await authSignInWithGoogle();
+      // o próprio onAuthStateChanged cuida do redirecionamento de passo
+    } catch (err) {
+      console.error(err);
+      errorBox.textContent = "Não foi possível entrar com o Google. Tente novamente.";
+      errorBox.style.display = "block";
+    }
+  });
+
+  let uidAtual = null;
+
+  btnSalvar.addEventListener("click", async () => {
+    if (!uidAtual) return;
+    btnSalvar.disabled = true;
+    btnSalvar.textContent = "Salvando…";
+    try {
+      await updateUserProfile(uidAtual, {
+        avatar: avatarEscolhido,
+        generosFavoritos: Array.from(generosEscolhidos),
+        onboardingComplete: true,
+      });
+      showStep(stepSucesso);
+    } catch (err) {
+      console.error(err);
+      btnSalvar.disabled = false;
+      btnSalvar.textContent = "Salvar e continuar";
+    }
+  });
+
+  authOnStateChanged(async (user) => {
+    if (!user) {
+      showStep(stepLogin);
+      return;
+    }
+    showStep(stepLoading);
+    uidAtual = user.uid;
+    try {
+      const { profile, isNewUser } = await ensureUserProfile(user);
+      if (isNewUser || !profile.onboardingComplete) {
+        document.getElementById("onboarding-photo").src = user.photoURL || "";
+        document.getElementById("onboarding-name").textContent = user.displayName || "";
+        showStep(stepOnboarding);
+      } else {
+        window.location.href = "carteirinha.html";
+      }
+    } catch (err) {
+      console.error(err);
+      showStep(stepLogin);
+      const errorBox = document.getElementById("login-error");
+      errorBox.textContent = "Erro ao carregar seu perfil. Tente novamente.";
+      errorBox.style.display = "block";
+    }
+  });
+})();
+</script>
+</body>
+</html>
