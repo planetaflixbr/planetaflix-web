@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Minha carteirinha — Planeta Flix</title>
+<meta name="description" content="Sua carteirinha de cinéfilo Planeta Flix.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poetsen+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .card-wrap{max-width:420px;margin:0 auto;padding:40px 20px 20px;}
+  .flip-scene{perspective:1200px;}
+  .flip-card{
+    position:relative;width:100%;aspect-ratio:16/10;transition:transform .6s;transform-style:preserve-3d;
+    cursor:pointer;
+  }
+  .flip-card.flipped{transform:rotateY(180deg);}
+  .flip-face{
+    position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;
+    box-shadow:0 10px 30px rgba(20,50,50,.22);overflow:hidden;
+  }
+  .flip-front{
+    background:linear-gradient(135deg,var(--turquesa),var(--verde-escuro));color:#fff;
+    padding:20px 22px;display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .flip-back{
+    background:#fff;transform:rotateY(180deg);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:20px;color:var(--texto);
+  }
+  .card-top{display:flex;align-items:center;gap:12px;}
+  .card-avatar{
+    width:52px;height:52px;border-radius:50%;background:var(--dourado);display:flex;
+    align-items:center;justify-content:center;font-size:26px;flex-shrink:0;overflow:hidden;
+  }
+  .card-avatar img{width:100%;height:100%;object-fit:cover;}
+  .card-name{font-weight:800;font-size:16px;}
+  .card-tier{font-size:11px;opacity:.85;text-transform:uppercase;letter-spacing:.05em;}
+  .card-stats{display:flex;gap:18px;margin-top:10px;}
+  .card-stats div{font-size:11px;opacity:.9;}
+  .card-stats strong{display:block;font-size:15px;font-weight:800;}
+  .card-number{font-family:monospace;font-size:13px;letter-spacing:.06em;opacity:.9;}
+  .card-genres{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .card-genres span{background:rgba(255,255,255,.18);border-radius:12px;padding:3px 9px;font-size:10.5px;font-weight:700;}
+  .qr-hint{font-size:11px;color:var(--muted);margin-top:10px;}
+  .flip-hint{text-align:center;font-size:11.5px;color:var(--muted);margin-top:10px;}
+
+  .actions{display:flex;flex-direction:column;gap:10px;margin-top:26px;}
+  .action-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:24px;
+    font-weight:700;font-size:13.5px;cursor:pointer;border:none;
+  }
+  .action-btn.wallet{background:#111;color:#fff;opacity:.55;cursor:not-allowed;}
+  .action-btn.share{background:var(--turquesa);color:#fff;}
+  .action-btn.share:hover{background:var(--turquesa-dark);}
+  .action-btn.logout{background:transparent;color:var(--muted);border:1px solid #dfe7e6;}
+  .wallet-note{font-size:11px;color:var(--muted);text-align:center;margin-top:-4px;}
+
+  .loading-box{text-align:center;padding:60px 20px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="brand-row">
+    <svg class="logo-tv" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+      <line x1="16" y1="4" x2="26" y2="16" stroke="#b9b091" stroke-width="3" stroke-linecap="round"/>
+      <line x1="48" y1="4" x2="38" y2="16" stroke="#b9b091" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="16" cy="4" r="3" fill="#b9b091"/>
+      <circle cx="48" cy="4" r="3" fill="#b9b091"/>
+      <rect x="4" y="14" width="56" height="30" rx="10" fill="#ffffff" fill-opacity="0.15"/>
+      <rect x="10" y="19" width="34" height="20" rx="4" fill="#ffffff"/>
+    </svg>
+    <span class="brand brand-font">PLANETA <span>FLIX</span></span>
+  </a>
+  <nav>
+    <a href="app.html">‹ Página inicial</a>
+  </nav>
+</header>
+
+<div class="card-wrap">
+
+  <div class="loading-box" id="loading-box">Carregando sua carteirinha…</div>
+
+  <div id="card-content" style="display:none;">
+    <div class="flip-scene">
+      <div class="flip-card" id="flip-card">
+        <div class="flip-face flip-front">
+          <div class="card-top">
+            <div class="card-avatar" id="card-avatar"></div>
+            <div>
+              <div class="card-name" id="card-name"></div>
+              <div class="card-tier">Cinéfilo Planeta Flix</div>
+            </div>
+          </div>
+          <div>
+            <div class="card-genres" id="card-genres"></div>
+            <div class="card-stats">
+              <div>Sócio nº<strong id="card-number"></strong></div>
+              <div>Desde<strong id="card-since"></strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-face flip-back">
+          <img id="card-qr" width="140" height="140" alt="QR code da carteirinha">
+          <div class="qr-hint">Sócio nº <span id="card-number-back"></span></div>
+        </div>
+      </div>
+    </div>
+    <p class="flip-hint">Toque na carteirinha para virar</p>
+
+    <div class="actions">
+      <button class="action-btn wallet" id="btn-wallet" disabled>📲 Adicionar ao Google Wallet</button>
+      <div class="wallet-note">Em breve — aguardando o cadastro do Planeta Flix como emissor no Google Wallet.</div>
+      <button class="action-btn share" id="btn-share">🔗 Compartilhar</button>
+      <button class="action-btn logout" id="btn-logout">Sair da conta</button>
+    </div>
+  </div>
+
+</div>
+
+<footer>Planeta Flix · MVL de Curadoria · Fase 1 de 3 (Curadoria → Analítica → Locadora)</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+(function () {
+  const loadingBox = document.getElementById("loading-box");
+  const cardContent = document.getElementById("card-content");
+
+  document.getElementById("flip-card").addEventListener("click", function () {
+    this.classList.toggle("flipped");
+  });
+
+  document.getElementById("btn-logout").addEventListener("click", async () => {
+    await authSignOut();
+    window.location.href = "cadastro.html";
+  });
+
+  document.getElementById("btn-share").addEventListener("click", async () => {
+    const shareData = {
+      title: "Minha carteirinha Planeta Flix",
+      text: "Essa é minha carteirinha de cinéfilo no Planeta Flix!",
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch (e) { /* usuário cancelou */ }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        alert("Link copiado para a área de transferência!");
+      } catch (e) {
+        alert(shareData.url);
+      }
+    }
+  });
+
+  authOnStateChanged(async (user) => {
+    if (!user) {
+      window.location.href = "cadastro.html";
+      return;
+    }
+    const profile = await getUserProfile(user.uid);
+    if (!profile || !profile.onboardingComplete) {
+      window.location.href = "cadastro.html";
+      return;
+    }
+
+    document.getElementById("card-name").textContent = profile.nome || user.displayName || "";
+    document.getElementById("card-avatar").textContent = profile.avatar || "🎬";
+    document.getElementById("card-number").textContent = String(profile.memberNumber || "").padStart(5, "0");
+    document.getElementById("card-number-back").textContent = String(profile.memberNumber || "").padStart(5, "0");
+    document.getElementById("card-since").textContent = formatarMemberSince(profile.memberSince) || "—";
+
+    const genresBox = document.getElementById("card-genres");
+    (profile.generosFavoritos || []).slice(0, 3).forEach((g) => {
+      const span = document.createElement("span");
+      span.textContent = g;
+      genresBox.appendChild(span);
+    });
+
+    const qrData = encodeURIComponent("planetaflix.com.br/socio/" + (profile.memberNumber || user.uid));
+    document.getElementById("card-qr").src =
+      "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" + qrData;
+
+    loadingBox.style.display = "none";
+    cardContent.style.display = "block";
+  });
+})();
+</script>
+</body>
+</html>
