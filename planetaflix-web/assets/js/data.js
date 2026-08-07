@@ -71,6 +71,9 @@ const MOCK_PEOPLE = [
 function findMockTitleById(id) {
   return MOCK_TITLES.find(t => t.id === id);
 }
+function findMockPersonById(id) {
+  return MOCK_PEOPLE.find(p => p.id === id);
+}
 function searchMock(query) {
   const q = query.trim().toLowerCase();
   if (!q) return { titles: [], people: [] };
