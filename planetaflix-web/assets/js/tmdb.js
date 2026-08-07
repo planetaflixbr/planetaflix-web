@@ -36,10 +36,12 @@ async function tmdbSearch(query) {
   };
 }
 
-/** Detalhe completo de um título: metadata + elenco + onde assistir + external_ids (para casar com OMDb). */
+/** Detalhe completo de um título: metadata + elenco + onde assistir + classificação indicativa + external_ids. */
 async function tmdbTitleDetails(mediaType, id) {
+  // release_dates só existe em /movie, content_ratings só existe em /tv — cada tipo pede o seu.
+  const ratingsAppend = mediaType === "tv" ? "content_ratings" : "release_dates";
   const data = await tmdbFetch(`/${mediaType}/${id}`, {
-    append_to_response: "credits,watch/providers,external_ids",
+    append_to_response: `credits,watch/providers,external_ids,${ratingsAppend}`,
   });
   const providers = (data["watch/providers"] && data["watch/providers"].results && data["watch/providers"].results[CONFIG.WATCH_REGION]) || {};
   const flatrate = providers.flatrate || [];
@@ -56,6 +58,10 @@ async function tmdbTitleDetails(mediaType, id) {
     ...cast.map(c => [c.name, "Elenco"]),
   ];
 
+  const ageRating = mediaType === "tv"
+    ? extractTvAgeRating(data.content_ratings)
+    : extractMovieAgeRating(data.release_dates);
+
   return {
     id: String(data.id),
     mediaType,
@@ -63,7 +69,7 @@ async function tmdbTitleDetails(mediaType, id) {
     year: (data.release_date || data.first_air_date || "").slice(0, 4),
     genres: (data.genres || []).map(g => g.name),
     runtime: data.runtime ? `${data.runtime}min` : (data.episode_run_time && data.episode_run_time[0] ? `${data.episode_run_time[0]}min/ep` : "Série"),
-    ageRating: "",
+    ageRating,
     poster: data.poster_path ? TMDB_IMG_BASE + data.poster_path : null,
     backdrop: data.backdrop_path ? TMDB_IMG_BASE.replace("w500", "w1280") + data.backdrop_path : null,
     synopsis: data.overview || "Sinopse não disponível.",
@@ -77,6 +83,32 @@ async function tmdbTitleDetails(mediaType, id) {
     // pode não resolver para todo título, mas acerta a maioria dos lançamentos internacionais.
     letterboxdSlug: slugify(data.original_title || data.original_name || data.title || data.name, data.release_date || data.first_air_date),
   };
+}
+
+/** Primeira certificação não-vazia dentro de um país (release_dates de /movie). */
+function pickCertification(countryEntry) {
+  if (!countryEntry || !countryEntry.release_dates) return "";
+  const withCert = countryEntry.release_dates.find(rd => rd.certification);
+  return withCert ? withCert.certification : "";
+}
+
+/** Classificação indicativa de filme: prioriza o Brasil (ClassInd), cai para os EUA se faltar. */
+function extractMovieAgeRating(releaseDates) {
+  if (!releaseDates || !releaseDates.results) return "";
+  const br = releaseDates.results.find(r => r.iso_3166_1 === "BR");
+  const brCert = pickCertification(br);
+  if (brCert) return brCert === "L" ? "Livre" : `${brCert} anos`;
+  const us = releaseDates.results.find(r => r.iso_3166_1 === "US");
+  return pickCertification(us) || "";
+}
+
+/** Classificação indicativa de série: prioriza o Brasil (ClassInd), cai para os EUA se faltar. */
+function extractTvAgeRating(contentRatings) {
+  if (!contentRatings || !contentRatings.results) return "";
+  const br = contentRatings.results.find(r => r.iso_3166_1 === "BR");
+  if (br && br.rating) return br.rating === "L" ? "Livre" : `${br.rating} anos`;
+  const us = contentRatings.results.find(r => r.iso_3166_1 === "US");
+  return (us && us.rating) || "";
 }
 
 function mapTmdbSummary(r) {
@@ -97,7 +129,7 @@ function slugify(title, dateStr) {
   if (!title) return "";
   const year = (dateStr || "").slice(0, 4);
   const base = title.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD").replace(/\p{Diacritic}/gu, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
   return year ? `${base}-${year}` : base;
 }
