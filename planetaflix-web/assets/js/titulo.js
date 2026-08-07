@@ -31,8 +31,15 @@ function renderDetail(t) {
     </div>
   `;
 
+  // Cada item de "where" é [nome, corDeMarca, logoUrl?]. O logo (asset real do TMDb) é
+  // preferido; quando não existe, cai para um ponto colorido com a cor oficial do provedor.
   const whereHtml = (t.where && t.where.length)
-    ? t.where.map(([name, color]) => `<div class="platform"><span class="dot" style="background:${color}"></span>${name}</div>`).join("")
+    ? t.where.map(([name, color, logo]) => `
+        <div class="platform">
+          ${logo ? `<img class="platform-logo" src="${logo}" alt="${name}" loading="lazy">` : `<span class="dot" style="background:${color}"></span>`}
+          ${name}
+        </div>
+      `).join("")
     : `<div class="empty-state" style="padding:8px 0;">Não encontramos este título em nenhum streaming no Brasil no momento.</div>`;
 
   // Atribuição obrigatória: dados de "onde assistir" vêm da parceria TMDb + JustWatch
