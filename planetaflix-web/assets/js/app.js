@@ -37,6 +37,24 @@ function resultRowHtml(t) {
   `;
 }
 
+/* Pessoa: usa o mesmo layout de result-row, com foto redonda (.thumb.round) e liga
+   para pessoa.html. Preferimos p.tmdbId (id numérico puro do TMDb) quando existe —
+   é o que a API /person/{id} espera; no modo demonstração usamos p.id direto. */
+function personRowHtml(p) {
+  const bg = p.photo ? `background-image:url('${p.photo}')` : `background:${p.bg || "var(--dourado)"}`;
+  const linkId = p.tmdbId || p.id;
+  return `
+    <a class="result-row" href="pessoa.html?id=${encodeURIComponent(linkId)}">
+      <div class="thumb round" style="${bg}"></div>
+      <div class="meta">
+        <div class="t">${p.name}</div>
+        <div class="s">${p.role || "Pessoa"}</div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+  `;
+}
+
 /* Evita disparar uma busca a cada tecla digitada — espera o usuário pausar por `delay`ms
    antes de consultar a API. Reduz chamadas e evita a tela piscando a cada letra. */
 function debounce(fn, delay) {
@@ -71,14 +89,19 @@ async function runSearch(query) {
   resultsTitle.textContent = `Resultados para "${query}"`;
   resultsList.innerHTML = `<div class="empty-state">Buscando…</div>`;
 
-  const { titles } = await svcSearch(query);
+  const { titles, people } = await svcSearch(query);
   if (myToken !== searchToken) return; // uma busca mais recente já está em andamento
 
-  if (!titles.length) {
-    resultsList.innerHTML = `<div class="empty-state">Nenhum título encontrado. Tente outro nome.</div>`;
+  const rows = [
+    ...(people || []).slice(0, 4).map(personRowHtml),
+    ...titles.map(resultRowHtml),
+  ];
+
+  if (!rows.length) {
+    resultsList.innerHTML = `<div class="empty-state">Nenhum título ou pessoa encontrado. Tente outro nome.</div>`;
     return;
   }
-  resultsList.innerHTML = titles.map(resultRowHtml).join("");
+  resultsList.innerHTML = rows.join("");
 }
 
 function initHome() {
