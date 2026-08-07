@@ -2,8 +2,9 @@
  * PLANETA FLIX — Camada de serviço
  * Decide, de forma transparente para as páginas, se os dados vêm do TMDb/OMDb
  * (modo real) ou do catálogo de exemplo (modo demonstração). As páginas
- * (index.html, titulo.html) só chamam as funções abaixo — nunca tmdb.js/omdb.js
- * ou data.js diretamente. Isso permite ligar as APIs reais editando só o config.js.
+ * (index.html, titulo.html, pessoa.html) só chamam as funções abaixo — nunca
+ * tmdb.js/omdb.js ou data.js diretamente. Isso permite ligar as APIs reais
+ * editando só o config.js.
  */
 
 function isDemoMode() {
@@ -54,6 +55,32 @@ async function svcTitleDetails(mediaType, id) {
     const t = findMockTitleById(id);
     return t ? { ...t, poster: null, backdrop: null } : null;
   }
+}
+
+/* Ficha de pessoa (ator, diretor, roteirista...) usada por pessoa.html. No modo
+   demonstração, a filmografia é montada a partir dos filmoIds do catálogo mock. */
+async function svcPersonDetails(id) {
+  if (isDemoMode()) {
+    return mockPersonDetails(id);
+  }
+  try {
+    const details = await tmdbPersonDetails(id);
+    if (!details) return mockPersonDetails(id);
+    return details;
+  } catch (e) {
+    console.warn("Não foi possível carregar do TMDb, tentando catálogo de exemplo.", e);
+    return mockPersonDetails(id);
+  }
+}
+
+function mockPersonDetails(id) {
+  const p = findMockPersonById(id);
+  if (!p) return null;
+  const filmography = (p.filmoIds || [])
+    .map(fid => findMockTitleById(fid))
+    .filter(Boolean)
+    .map(t => ({ ...t, poster: null }));
+  return { ...p, photo: null, bio: "", filmography };
 }
 
 function letterboxdUrl(slug) {
