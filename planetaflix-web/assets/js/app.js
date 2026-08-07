@@ -37,11 +37,28 @@ function resultRowHtml(t) {
   `;
 }
 
+/* Evita disparar uma busca a cada tecla digitada — espera o usuário pausar por `delay`ms
+   antes de consultar a API. Reduz chamadas e evita a tela piscando a cada letra. */
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+/* Token da busca em andamento: se a resposta de uma busca antiga chegar depois de uma
+   busca mais nova já ter sido disparada, ela é descartada — evita resultado desatualizado
+   sobrescrever um mais recente (condição de corrida entre requisições). */
+let searchToken = 0;
+
 async function runSearch(query) {
   const trendingSection = document.getElementById("trending-section");
   const resultsSection = document.getElementById("results-section");
   const resultsList = document.getElementById("results-list");
   const resultsTitle = document.getElementById("results-title");
+
+  const myToken = ++searchToken;
 
   if (!query.trim()) {
     trendingSection.style.display = "";
@@ -55,6 +72,8 @@ async function runSearch(query) {
   resultsList.innerHTML = `<div class="empty-state">Buscando…</div>`;
 
   const { titles } = await svcSearch(query);
+  if (myToken !== searchToken) return; // uma busca mais recente já está em andamento
+
   if (!titles.length) {
     resultsList.innerHTML = `<div class="empty-state">Nenhum título encontrado. Tente outro nome.</div>`;
     return;
@@ -87,11 +106,14 @@ function initHome() {
     runSearch(q);
   });
 
-  input.addEventListener("input", () => {
-    if (input.value.trim().length >= 3 || input.value.trim().length === 0) {
+  const debouncedSearch = debounce(() => {
+    const v = input.value.trim();
+    if (v.length >= 3 || v.length === 0) {
       runSearch(input.value);
     }
-  });
+  }, 350);
+
+  input.addEventListener("input", debouncedSearch);
 }
 
 document.addEventListener("DOMContentLoaded", initHome);
