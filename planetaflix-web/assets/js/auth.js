@@ -87,3 +87,38 @@ function formatarMemberSince(timestamp) {
   const data = timestamp.toDate();
   return data.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 }
+
+/*
+ * Favoritos / watchlist pessoal — subcoleção users/{uid}/favoritos.
+ * Cada documento é identificado por "{mediaType}_{id}" (ex.: "movie_27205"),
+ * evitando duplicidade e permitindo checar/alternar o status com um único get/set.
+ */
+function favoritoRef(uid, mediaType, id) {
+  return fbDb.collection("users").doc(uid).collection("favoritos").doc(`${mediaType}_${id}`);
+}
+
+async function addFavorito(uid, titulo) {
+  await favoritoRef(uid, titulo.mediaType, titulo.id).set({
+    mediaType: titulo.mediaType,
+    id: titulo.id,
+    title: titulo.title,
+    poster: titulo.poster || null,
+    year: titulo.year || null,
+    addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+async function removeFavorito(uid, mediaType, id) {
+  await favoritoRef(uid, mediaType, id).delete();
+}
+
+async function isFavorito(uid, mediaType, id) {
+  const snap = await favoritoRef(uid, mediaType, id).get();
+  return snap.exists;
+}
+
+/* Lista os favoritos do usuário, mais recentes primeiro. */
+async function getFavoritos(uid) {
+  const snap = await fbDb.collection("users").doc(uid).collection("favoritos").orderBy("addedAt", "desc").get();
+  return snap.docs.map((d) => d.data());
+}
