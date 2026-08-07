@@ -37,6 +37,37 @@ async function tmdbSearch(query) {
 }
 
 /** Detalhe completo de um título: metadata + elenco + onde assistir + classificação indicativa + external_ids. */
+/* Cores oficiais de marca dos principais serviços de streaming no Brasil —
+   usadas como fallback quando o logo do provedor (TMDb) não carrega, e como
+   acento visual junto ao logo. Provedor fora da lista cai no turquesa da marca. */
+const PROVIDER_COLORS = {
+  "Netflix": "#e50914",
+  "Amazon Prime Video": "#00a8e1",
+  "Max": "#4c2fc9",
+  "HBO Max": "#4c2fc9",
+  "Disney Plus": "#113ccf",
+  "Disney+": "#113ccf",
+  "Star Plus": "#0b0b0b",
+  "Star+": "#0b0b0b",
+  "Apple TV Plus": "#000000",
+  "Apple TV+": "#000000",
+  "Apple TV": "#000000",
+  "Paramount Plus": "#0064ff",
+  "Paramount+": "#0064ff",
+  "Globoplay": "#ff6600",
+  "Telecine": "#c8102e",
+  "Telecine Play": "#c8102e",
+  "Looke": "#ffcc00",
+  "MUBI": "#000000",
+  "Claro video": "#d90007",
+  "YouTube": "#ff0000",
+  "Google Play Movies": "#4285f4",
+};
+
+function providerColor(name) {
+  return PROVIDER_COLORS[name] || "#1e858d";
+}
+
 async function tmdbTitleDetails(mediaType, id) {
   // release_dates só existe em /movie, content_ratings só existe em /tv — cada tipo pede o seu.
   const ratingsAppend = mediaType === "tv" ? "content_ratings" : "release_dates";
@@ -46,7 +77,12 @@ async function tmdbTitleDetails(mediaType, id) {
   const providers = (data["watch/providers"] && data["watch/providers"].results && data["watch/providers"].results[CONFIG.WATCH_REGION]) || {};
   const flatrate = providers.flatrate || [];
   const rent = providers.rent || [];
-  const where = (flatrate.length ? flatrate : rent).map(p => [p.provider_name, "#1e858d"]);
+  // Logo real do provedor (asset do TMDb) + cor oficial de marca como acento/fallback.
+  const where = (flatrate.length ? flatrate : rent).map(p => [
+    p.provider_name,
+    providerColor(p.provider_name),
+    p.logo_path ? TMDB_IMG_BASE.replace("w500", "w92") + p.logo_path : null,
+  ]);
   // Link para a página de disponibilidade no TMDb (fonte dos dados: parceria TMDb + JustWatch).
   // Atribuição ao JustWatch é exigida pelos termos da API — ver seção "Onde assistir" em titulo.js.
   const whereLink = providers.link || null;
