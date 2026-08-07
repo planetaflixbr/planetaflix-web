@@ -147,6 +147,35 @@ function extractTvAgeRating(contentRatings) {
   return (us && us.rating) || "";
 }
 
+/** Detalhe de pessoa (ator, diretor, roteirista...) + filmografia combinada (elenco + equipe). */
+async function tmdbPersonDetails(id) {
+  const data = await tmdbFetch(`/person/${id}`, { append_to_response: "combined_credits" });
+  const credits = (data.combined_credits && data.combined_credits.cast) || [];
+
+  const seen = new Set();
+  const filmography = credits
+    .filter(c => c.poster_path && (c.title || c.name))
+    .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+    .filter(c => {
+      const key = `${c.media_type}-${c.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 24)
+    .map(mapTmdbSummary);
+
+  return {
+    id: String(data.id),
+    tmdbId: data.id,
+    name: data.name,
+    role: data.known_for_department || "",
+    photo: data.profile_path ? TMDB_IMG_BASE + data.profile_path : null,
+    bio: data.biography || "",
+    filmography,
+  };
+}
+
 function mapTmdbSummary(r) {
   return {
     id: String(r.id),
