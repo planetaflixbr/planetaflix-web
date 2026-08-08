@@ -1,7 +1,56 @@
 /* PLANETA FLIX — Lógica da ficha consolidada do título (titulo.html) */
 
+let currentUser = null;
+let currentTitle = null;
+
 function initials(name) {
   return name.split(" ").map(w => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+}
+
+function saveButtonHtml() {
+  return `<button class="save-btn" id="save-btn" disabled>🤍 Salvar</button>`;
+}
+
+/* Reflete login + status de favorito no botão. Sem login, o botão fica
+   habilitado e leva ao cadastro ao ser clicado (gate feito em onSaveClick). */
+async function updateSaveButton() {
+  const btn = document.getElementById("save-btn");
+  if (!btn || !currentTitle) return;
+  if (!currentUser) {
+    btn.textContent = "🤍 Salvar";
+    btn.classList.remove("saved");
+    btn.disabled = false;
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const saved = await isFavorito(currentUser.uid, currentTitle.mediaType, currentTitle.id);
+    btn.textContent = saved ? "✓ Salvo" : "🤍 Salvar";
+    btn.classList.toggle("saved", saved);
+  } catch (e) {
+    console.error(e);
+  }
+  btn.disabled = false;
+}
+
+async function onSaveClick() {
+  const btn = document.getElementById("save-btn");
+  if (!currentTitle) return;
+  if (!currentUser) {
+    window.location.href = "cadastro.html";
+    return;
+  }
+  btn.disabled = true;
+  try {
+    if (btn.classList.contains("saved")) {
+      await removeFavorito(currentUser.uid, currentTitle.mediaType, currentTitle.id);
+    } else {
+      await addFavorito(currentUser.uid, currentTitle);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  await updateSaveButton();
 }
 
 function ratingChip(cls, label, value) {
@@ -15,6 +64,7 @@ function ratingChip(cls, label, value) {
 }
 
 function renderDetail(t) {
+  currentTitle = t;
   document.title = `${t.title} — Planeta Flix`;
   const heroBg = t.backdrop ? `background-image:url('${t.backdrop}')` : `background:${t.bg || "linear-gradient(160deg,#1b4c4a,#1e858d)"}`;
   const genres = (t.genres || []).join(", ");
@@ -60,8 +110,13 @@ function renderDetail(t) {
   `).join("");
 
   document.getElementById("detail-body").innerHTML = `
-    <div class="detail-title">${t.title}</div>
-    <div class="detail-sub">${[t.year, genres, t.runtime, t.ageRating].filter(Boolean).join(" · ")}</div>
+    <div class="detail-top-row">
+      <div>
+        <div class="detail-title">${t.title}</div>
+        <div class="detail-sub">${[t.year, genres, t.runtime, t.ageRating].filter(Boolean).join(" · ")}</div>
+      </div>
+      ${saveButtonHtml()}
+    </div>
     <div class="ratings-row">${ratingsHtml}</div>
     <div class="block-title">Onde assistir</div>
     <div class="where-row">${whereHtml}</div>
@@ -70,6 +125,9 @@ function renderDetail(t) {
     <div class="block-title">Elenco e equipe</div>
     <div class="crew-scroll">${crewHtml || "<span class='empty-state'>Sem informações de elenco.</span>"}</div>
   `;
+
+  document.getElementById("save-btn").addEventListener("click", onSaveClick);
+  updateSaveButton();
 }
 
 async function initTitulo() {
@@ -92,6 +150,11 @@ async function initTitulo() {
     return;
   }
   renderDetail(t);
+
+  authOnStateChanged((user) => {
+    currentUser = user;
+    updateSaveButton();
+  });
 }
 
 document.addEventListener("DOMContentLoaded", initTitulo);
