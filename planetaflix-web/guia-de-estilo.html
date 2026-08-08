@@ -29,6 +29,7 @@
   .sg-demo-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;}
   .sg-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
   .sg-grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;max-width:520px;}
+  .sg-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 </style>
 </head>
 <body>
@@ -90,14 +91,16 @@
 
 <div class="sg-section">
   <h2>Espaçamento &amp; forma</h2>
-  <table class="sg-token-table">
-    <tr><th>Token</th><th>Valor</th><th>Uso</th></tr>
-    <tr><td><code>--radius</code></td><td>14px</td><td>Cards, chips grandes, feature cards</td></tr>
-    <tr><td>raio pequeno</td><td>8–12px</td><td>Thumbs, rating chips</td></tr>
-    <tr><td>raio pill</td><td>20–30px</td><td>Botões, badges, search box</td></tr>
-    <tr><td>sombra padrão</td><td><code>0 3px 10px rgba(20,50,50,.08)</code></td><td>Cards sobre --bg-app</td></tr>
-    <tr><td>largura máx. de conteúdo</td><td>1080px</td><td><code>.container</code></td></tr>
-  </table>
+  <div class="sg-table-scroll">
+    <table class="sg-token-table">
+      <tr><th>Token</th><th>Valor</th><th>Uso</th></tr>
+      <tr><td><code>--radius</code></td><td>14px</td><td>Cards, chips grandes, feature cards</td></tr>
+      <tr><td>raio pequeno</td><td>8–12px</td><td>Thumbs, rating chips</td></tr>
+      <tr><td>raio pill</td><td>20–30px</td><td>Botões, badges, search box</td></tr>
+      <tr><td>sombra padrão</td><td><code>0 3px 10px rgba(20,50,50,.08)</code></td><td>Cards sobre --bg-app</td></tr>
+      <tr><td>largura máx. de conteúdo</td><td>1080px</td><td><code>.container</code></td></tr>
+    </table>
+  </div>
 </div>
 
 <div class="sg-section">
