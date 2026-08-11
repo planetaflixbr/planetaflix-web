@@ -122,3 +122,46 @@ async function getFavoritos(uid) {
   const snap = await fbDb.collection("users").doc(uid).collection("favoritos").orderBy("addedAt", "desc").get();
   return snap.docs.map((d) => d.data());
 }
+
+/*
+ * Avaliações da comunidade (nota Planeta Flix: estrelas + comentário).
+ * Fica numa coleção de nível superior "avaliacoes" — diferente de favoritos,
+ * aqui QUALQUER visitante precisa poder ler (nota média + comentários),
+ * não só o autor. Um documento por usuário por título: "{mediaType}_{id}_{uid}",
+ * reescrever o mesmo documento = usuário edita a própria avaliação.
+ * IMPORTANTE: as Regras de Segurança do Firestore precisam liberar leitura
+ * pública e escrita restrita ao dono (uid do documento) nesta coleção.
+ */
+function avaliacaoRef(mediaType, id, uid) {
+  return fbDb.collection("avaliacoes").doc(`${mediaType}_${id}_${uid}`);
+}
+
+async function submitAvaliacao(uid, perfil, titulo, stars, comentario) {
+  await avaliacaoRef(titulo.mediaType, titulo.id, uid).set({
+    mediaType: titulo.mediaType,
+    id: titulo.id,
+    uid,
+    nome: (perfil && perfil.nome) || "Cinéfilo Planeta Flix",
+    avatar: (perfil && perfil.avatar) || "🎬",
+    stars,
+    comentario: comentario || "",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+/* Todas as avaliações de um título. Ordenadas no cliente (não no Firestore)
+   para não depender de um índice composto — a query usa só filtros de
+   igualdade, que o Firestore indexa automaticamente. */
+async function getAvaliacoes(mediaType, id) {
+  const snap = await fbDb.collection("avaliacoes")
+    .where("mediaType", "==", mediaType)
+    .where("id", "==", id)
+    .get();
+  const docs = snap.docs.map((d) => d.data());
+  docs.sort((a, b) => {
+    const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+    const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+    return tb - ta;
+  });
+  return docs;
+}
