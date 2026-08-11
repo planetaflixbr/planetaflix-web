@@ -139,8 +139,11 @@ img{max-width:100%;display:block;}
 .rating-chip .src{font-size:10.5px;font-weight:800;letter-spacing:.03em;color:var(--muted);text-transform:uppercase;}
 .rating-chip .val{font-size:19px;font-weight:800;margin-top:3px;}
 .rating-chip.imdb .val{color:#c9a227;}
-.rating-chip.rt .val{color:#d34a3f;}
 .rating-chip.lb .val a{color:var(--turquesa); font-size:13px; font-weight:700;}
+.rating-chip.pf .val{color:var(--turquesa);}
+
+.trailer-wrap{position:relative;width:100%;padding-top:56.25%;border-radius:var(--radius);overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.15);margin-bottom:4px;background:#000;}
+.trailer-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
 
 .block-title{font-size:13px;font-weight:800;color:var(--verde-escuro);text-transform:uppercase;letter-spacing:.04em;margin:22px 0 10px;}
 .where-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
@@ -177,6 +180,36 @@ img{max-width:100%;display:block;}
 .save-btn:disabled{opacity:.6;cursor:default;}
 
 .empty-state a{color:var(--turquesa);font-weight:700;}
+
+/* Avaliações da comunidade (nota Planeta Flix) */
+.review-form-box{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:0 3px 10px rgba(20,50,50,.08);margin-bottom:16px;}
+.review-form-label{font-size:12px;font-weight:800;color:var(--verde-escuro);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;}
+.star-picker{display:flex;gap:6px;margin-bottom:12px;}
+.star-picker .star{font-size:26px;color:#dfe7e6;cursor:pointer;line-height:1;transition:color .1s ease;}
+.star-picker .star.filled{color:#e0b33e;}
+.review-textarea{
+  width:100%;border:1px solid #dfe7e6;border-radius:10px;padding:10px 12px;font-size:13.5px;
+  font-family:inherit;resize:vertical;min-height:64px;margin-bottom:12px;box-sizing:border-box;
+}
+.review-submit-btn{
+  background:var(--turquesa);color:#fff;border:none;border-radius:20px;padding:10px 20px;
+  font-weight:700;font-size:13.5px;cursor:pointer;
+}
+.review-submit-btn:hover{background:var(--turquesa-dark);}
+.review-submit-btn:disabled{opacity:.5;cursor:default;}
+.review-hint{font-size:12px;color:var(--muted);margin-top:10px;}
+.review-hint a{color:var(--turquesa);font-weight:700;}
+
+.review-list{display:flex;flex-direction:column;gap:12px;margin-bottom:6px;}
+.review-card{background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:0 3px 10px rgba(20,50,50,.08);}
+.review-card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.review-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--dourado);display:flex;
+  align-items:center;justify-content:center;font-size:17px;flex-shrink:0;
+}
+.review-name{font-weight:700;font-size:13.5px;}
+.review-stars{color:#e0b33e;font-size:13px;letter-spacing:1px;}
+.review-comment{font-size:13.5px;line-height:1.55;color:#33403f;margin:0;}
 
 /* Ficha de pessoa */
 .person-card{display:flex;gap:20px;align-items:flex-start;margin-bottom:30px;}
