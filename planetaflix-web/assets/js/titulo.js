@@ -177,15 +177,12 @@ function renderDetail(t) {
 
   document.getElementById("detail-hero").setAttribute("style", heroBg);
 
-  const lbUrl = letterboxdUrl(t.letterboxdSlug);
   // Nota do Rotten Tomatoes removida por ora — ainda não usamos a API deles,
   // e exibir sem fonte real passaria uma informação que não temos.
+  // Nota do Letterboxd também ocultada por ora, pelo mesmo motivo — sem a
+  // API própria do Letterboxd conectada, não temos uma nota real para mostrar.
   const ratingsHtml = `
     ${ratingChip("imdb", "IMDb", t.imdbRating)}
-    <div class="rating-chip lb">
-      <div class="src">Letterboxd</div>
-      <div class="val"><a href="${lbUrl}" target="_blank" rel="noopener">Ver nota ↗</a></div>
-    </div>
     ${ratingChip("pf", "Planeta Flix", null, "pf-rating-val")}
   `;
 
