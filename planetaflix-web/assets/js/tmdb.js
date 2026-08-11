@@ -72,7 +72,10 @@ async function tmdbTitleDetails(mediaType, id) {
   // release_dates só existe em /movie, content_ratings só existe em /tv — cada tipo pede o seu.
   const ratingsAppend = mediaType === "tv" ? "content_ratings" : "release_dates";
   const data = await tmdbFetch(`/${mediaType}/${id}`, {
-    append_to_response: `credits,watch/providers,external_ids,${ratingsAppend}`,
+    append_to_response: `credits,watch/providers,external_ids,${ratingsAppend},videos`,
+    // Amplia o idioma dos vídeos além do pt-BR padrão — muitos trailers no TMDb
+    // só têm tag em inglês ou sem idioma nenhum; sem isso a maioria ficaria sem trailer.
+    include_video_language: "pt,en,null",
   });
   const providers = (data["watch/providers"] && data["watch/providers"].results && data["watch/providers"].results[CONFIG.WATCH_REGION]) || {};
   const flatrate = providers.flatrate || [];
@@ -98,6 +101,8 @@ async function tmdbTitleDetails(mediaType, id) {
     ? extractTvAgeRating(data.content_ratings)
     : extractMovieAgeRating(data.release_dates);
 
+  const trailerKey = extractTrailerKey(data.videos);
+
   return {
     id: String(data.id),
     mediaType,
@@ -118,7 +123,19 @@ async function tmdbTitleDetails(mediaType, id) {
     // É um "melhor palpite" enquanto não temos a API própria do Letterboxd (ver seção 6 do roadmap);
     // pode não resolver para todo título, mas acerta a maioria dos lançamentos internacionais.
     letterboxdSlug: slugify(data.original_title || data.original_name || data.title || data.name, data.release_date || data.first_air_date),
+    trailerKey,
   };
+}
+
+/** Escolhe o melhor vídeo do YouTube para embutir: trailer oficial > trailer > teaser. */
+function extractTrailerKey(videos) {
+  const results = (videos && videos.results) || [];
+  const onYoutube = (v) => v.site === "YouTube";
+  const officialTrailer = results.find(v => onYoutube(v) && v.type === "Trailer" && v.official);
+  const anyTrailer = results.find(v => onYoutube(v) && v.type === "Trailer");
+  const anyTeaser = results.find(v => onYoutube(v) && v.type === "Teaser");
+  const pick = officialTrailer || anyTrailer || anyTeaser;
+  return pick ? pick.key : null;
 }
 
 /** Primeira certificação não-vazia dentro de um país (release_dates de /movie). */
