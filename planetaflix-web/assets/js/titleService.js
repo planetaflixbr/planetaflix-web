@@ -125,6 +125,8 @@ function mockGenres() {
   return [...names].sort().map(n => ({ id: n, name: n }));
 }
 
+/* O catálogo de exemplo não guarda país de produção, então o filtro de origem
+   não se aplica no modo demonstração — só com o TMDb ligado. */
 function discoverMock({ mediaType = "movie", genre = "" } = {}) {
   const results = MOCK_TITLES
     .filter(t => t.mediaType === mediaType)

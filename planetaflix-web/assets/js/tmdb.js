@@ -227,7 +227,7 @@ async function tmdbGenres(mediaType = "movie") {
  *   (fora aluguel e compra) — é o que faz sentido para "os serviços que eu assino".
  * - vote_count.gte corta títulos com nota alta sustentada por um punhado de votos.
  */
-async function tmdbDiscover({ mediaType = "movie", providers = [], genre = "", maxRuntime = "", minRating = "", page = 1 } = {}) {
+async function tmdbDiscover({ mediaType = "movie", providers = [], genre = "", country = "", maxRuntime = "", minRating = "", page = 1 } = {}) {
   const params = {
     watch_region: CONFIG.WATCH_REGION,
     sort_by: "popularity.desc",
@@ -240,6 +240,10 @@ async function tmdbDiscover({ mediaType = "movie", providers = [], genre = "", m
     params.with_watch_monetization_types = "flatrate";
   }
   if (genre) params.with_genres = String(genre);
+  // País de produção (ISO 3166-1). Numa coprodução o TMDb lista vários países e
+  // o titulo aparece em qualquer um deles — "Cidade de Deus" continua brasileiro
+  // mesmo tendo coprodução estrangeira.
+  if (country) params.with_origin_country = String(country);
   if (minRating) params["vote_average.gte"] = String(minRating);
   // Duração só vale para filme: em série o runtime é por episódio e o filtro não se aplica.
   if (maxRuntime && mediaType === "movie") params["with_runtime.lte"] = String(maxRuntime);

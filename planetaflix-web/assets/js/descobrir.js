@@ -16,6 +16,7 @@ const filtros = {
   mediaType: "movie",
   providers: [],
   genre: "",
+  country: "",
   maxRuntime: "",
   minRating: "",
 };
@@ -190,6 +191,7 @@ function ligarCliquesDeResultado(origem) {
 
 function lerFiltrosDaTela() {
   filtros.genre = document.getElementById("filtro-genero").value;
+  filtros.country = document.getElementById("filtro-origem").value;
   filtros.maxRuntime = document.getElementById("filtro-duracao").value;
   filtros.minRating = document.getElementById("filtro-nota").value;
 }
@@ -271,7 +273,7 @@ async function initDescobrir() {
   });
   document.getElementById("btn-ver-opcoes").addEventListener("click", verOpcoes);
   document.getElementById("btn-sortear").addEventListener("click", sortear);
-  ["filtro-genero", "filtro-duracao", "filtro-nota"].forEach(id => {
+  ["filtro-genero", "filtro-origem", "filtro-duracao", "filtro-nota"].forEach(id => {
     document.getElementById(id).addEventListener("change", verOpcoes);
   });
 
