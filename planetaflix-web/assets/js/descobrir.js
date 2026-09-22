@@ -147,20 +147,24 @@ function renderVazio() {
 
 function renderLista(resultados, total) {
   const area = document.getElementById("resultado-area");
-  area.innerHTML = `<div class="grid-titles">${resultados.slice(0, RESULTS_LIMIT).map(cardHtml).join("")}</div>`;
+  // Nem todo título do TMDb tem pôster. Os que têm vão para a frente, para a
+  // grade não abrir com buracos cinzas antes das capas.
+  const ordenados = [...resultados].sort((a, b) => (b.poster ? 1 : 0) - (a.poster ? 1 : 0));
+  area.innerHTML = `<div class="grid-titles">${ordenados.slice(0, RESULTS_LIMIT).map(cardHtml).join("")}</div>`;
   setStatus(total ? `${total} títulos combinam — mostrando ${Math.min(resultados.length, RESULTS_LIMIT)}.` : "");
   ligarCliquesDeResultado("lista");
 }
 
 function renderSorteio(t) {
   const area = document.getElementById("resultado-area");
+  const semPoster = !t.poster;
   const bg = t.poster
     ? `background-image:url('${t.poster}')`
     : `background:${t.bg || "linear-gradient(160deg,#2a4a48,#1e858d)"}`;
   area.innerHTML = `
     <div class="roleta-card">
-      <a class="roleta-poster" href="titulo.html?type=${t.mediaType || "movie"}&id=${encodeURIComponent(t.id)}"
-         style="${bg}" data-resultado="${t.id}"></a>
+      <a class="roleta-poster${semPoster ? " sem-poster" : ""}" href="titulo.html?type=${t.mediaType || "movie"}&id=${encodeURIComponent(t.id)}"
+         style="${bg}" data-resultado="${t.id}">${semPoster ? `<span>${t.title}</span>` : ""}</a>
       <div class="roleta-info">
         <div class="roleta-tag">A escolha da noite</div>
         <h2 class="roleta-titulo">${t.title}</h2>
@@ -233,6 +237,10 @@ async function sortear() {
     const lote = pagina === 1 ? primeira : await svcDiscover({ ...filtros, page: pagina });
 
     let opcoes = lote.results.length ? lote.results : primeira.results;
+    // O sorteio mostra UM título em card grande: sem capa ele fica com cara de erro.
+    // Se houver candidatos com pôster, sorteia só entre eles.
+    const comPoster = opcoes.filter(t => t.poster);
+    if (comPoster.length) opcoes = comPoster;
     if (opcoes.length > 1 && ultimoSorteado) {
       const semRepetir = opcoes.filter(t => t.id !== ultimoSorteado);
       if (semRepetir.length) opcoes = semRepetir;

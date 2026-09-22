@@ -174,6 +174,12 @@ function renderDetail(t) {
   document.title = `${t.title} — Planeta Flix`;
   const heroBg = t.backdrop ? `background-image:url('${t.backdrop}')` : `background:${t.bg || "linear-gradient(160deg,#1b4c4a,#1e858d)"}`;
   const genres = (t.genres || []).join(", ");
+  // Coprodução pode listar 4, 5 países — mostrar todos estoura a linha de subtítulo,
+  // então ficam os dois primeiros (o TMDb ordena pelo principal) e o resto vira "+N".
+  const todosPaises = t.countries || [];
+  const paises = todosPaises.length > 2
+    ? `${todosPaises.slice(0, 2).join(", ")} +${todosPaises.length - 2}`
+    : todosPaises.join(", ");
 
   document.getElementById("detail-hero").setAttribute("style", heroBg);
 
@@ -232,7 +238,7 @@ function renderDetail(t) {
     <div class="detail-top-row">
       <div>
         <div class="detail-title">${t.title}</div>
-        <div class="detail-sub">${[t.year, genres, t.runtime, t.ageRating].filter(Boolean).join(" · ")}</div>
+        <div class="detail-sub">${[t.year, paises, genres, t.runtime, t.ageRating].filter(Boolean).join(" · ")}</div>
       </div>
       ${saveButtonHtml()}
     </div>

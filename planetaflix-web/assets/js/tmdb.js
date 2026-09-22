@@ -68,6 +68,35 @@ function providerColor(name) {
   return PROVIDER_COLORS[name] || "#1e858d";
 }
 
+/* Nome de país em português pelo próprio navegador, sem tabela fixa no código.
+   Se o ambiente não suportar Intl.DisplayNames, cai para o nome que o TMDb
+   manda (em inglês) e, na falta dele, para a própria sigla. */
+let regionNames = null;
+function countryName(code, fallback) {
+  if (regionNames === null) {
+    try {
+      regionNames = new Intl.DisplayNames(["pt-BR"], { type: "region" });
+    } catch (e) {
+      regionNames = false;
+    }
+  }
+  if (regionNames) {
+    try {
+      const nome = regionNames.of(code);
+      if (nome && nome !== code) return nome;
+    } catch (e) { /* sigla inválida: cai no fallback */ }
+  }
+  return fallback || code;
+}
+
+/** País(es) de produção: /movie traz production_countries, /tv traz origin_country (só siglas). */
+function extractCountries(data, mediaType) {
+  if (mediaType === "tv") {
+    return (data.origin_country || []).map(c => countryName(c));
+  }
+  return (data.production_countries || []).map(c => countryName(c.iso_3166_1, c.name));
+}
+
 async function tmdbTitleDetails(mediaType, id) {
   // release_dates só existe em /movie, content_ratings só existe em /tv — cada tipo pede o seu.
   const ratingsAppend = mediaType === "tv" ? "content_ratings" : "release_dates";
@@ -109,6 +138,7 @@ async function tmdbTitleDetails(mediaType, id) {
     title: data.title || data.name,
     year: (data.release_date || data.first_air_date || "").slice(0, 4),
     genres: (data.genres || []).map(g => g.name),
+    countries: extractCountries(data, mediaType),
     runtime: data.runtime ? `${data.runtime}min` : (data.episode_run_time && data.episode_run_time[0] ? `${data.episode_run_time[0]}min/ep` : "Série"),
     ageRating,
     poster: data.poster_path ? TMDB_IMG_BASE + data.poster_path : null,
