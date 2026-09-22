@@ -193,6 +193,66 @@ async function tmdbPersonDetails(id) {
   };
 }
 
+/* ------------------------------------------------------------------
+   Descoberta ("Me ajuda a escolher")
+   Diferente da busca: aqui o usuário NÃO sabe o título. Ele descreve o
+   que quer (serviços que assina, gênero, tempo disponível, nota mínima)
+   e o /discover do TMDb devolve os candidatos.
+   ------------------------------------------------------------------ */
+
+/** Serviços de streaming disponíveis na região, na ordem de relevância do TMDb. */
+async function tmdbWatchProviders(mediaType = "movie") {
+  const data = await tmdbFetch(`/watch/providers/${mediaType}`, { watch_region: CONFIG.WATCH_REGION });
+  return (data.results || [])
+    .slice()
+    .sort((a, b) => (a.display_priority ?? 999) - (b.display_priority ?? 999))
+    .map(p => ({
+      id: p.provider_id,
+      name: p.provider_name,
+      logo: p.logo_path ? TMDB_IMG_BASE.replace("w500", "w92") + p.logo_path : null,
+      color: providerColor(p.provider_name),
+    }));
+}
+
+/** Lista de gêneros. O TMDb mantém listas diferentes para filme e série. */
+async function tmdbGenres(mediaType = "movie") {
+  const data = await tmdbFetch(`/genre/${mediaType}/list`);
+  return (data.genres || []).map(g => ({ id: g.id, name: g.name }));
+}
+
+/**
+ * Busca por filtros em vez de por nome.
+ * - with_watch_providers usa "|" como OU: "está em QUALQUER um dos serviços marcados".
+ * - with_watch_monetization_types=flatrate limita ao que está incluso na assinatura
+ *   (fora aluguel e compra) — é o que faz sentido para "os serviços que eu assino".
+ * - vote_count.gte corta títulos com nota alta sustentada por um punhado de votos.
+ */
+async function tmdbDiscover({ mediaType = "movie", providers = [], genre = "", maxRuntime = "", minRating = "", page = 1 } = {}) {
+  const params = {
+    watch_region: CONFIG.WATCH_REGION,
+    sort_by: "popularity.desc",
+    include_adult: "false",
+    "vote_count.gte": "80",
+    page: String(page),
+  };
+  if (providers.length) {
+    params.with_watch_providers = providers.join("|");
+    params.with_watch_monetization_types = "flatrate";
+  }
+  if (genre) params.with_genres = String(genre);
+  if (minRating) params["vote_average.gte"] = String(minRating);
+  // Duração só vale para filme: em série o runtime é por episódio e o filtro não se aplica.
+  if (maxRuntime && mediaType === "movie") params["with_runtime.lte"] = String(maxRuntime);
+
+  const data = await tmdbFetch(`/discover/${mediaType}`, params);
+  return {
+    results: (data.results || []).map(r => mapTmdbSummary({ ...r, media_type: mediaType })),
+    // O TMDb não serve além da página 500, mesmo declarando mais.
+    totalPages: Math.min(data.total_pages || 1, 500),
+    totalResults: data.total_results || 0,
+  };
+}
+
 function mapTmdbSummary(r) {
   return {
     id: String(r.id),

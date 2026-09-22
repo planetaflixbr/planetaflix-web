@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Me ajuda a escolher — Planeta Flix</title>
+<meta name="description" content="Diga o que você assina e quanto tempo tem. O Planeta Flix mostra o que vale a pena assistir hoje — ou sorteia por você.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Me ajuda a escolher — Planeta Flix">
+<meta property="og:description" content="Sem ideia do que assistir? Filtre pelos seus streamings e pelo tempo que você tem — ou deixe o sorteio decidir.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poetsen+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="brand-row">
+    <svg class="logo-tv" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+      <line x1="16" y1="4" x2="26" y2="16" stroke="#b9b091" stroke-width="3" stroke-linecap="round"/>
+      <line x1="48" y1="4" x2="38" y2="16" stroke="#b9b091" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="16" cy="4" r="3" fill="#b9b091"/>
+      <circle cx="48" cy="4" r="3" fill="#b9b091"/>
+      <rect x="4" y="14" width="56" height="30" rx="10" fill="#ffffff" fill-opacity="0.15"/>
+      <rect x="10" y="19" width="34" height="20" rx="4" fill="#ffffff"/>
+    </svg>
+    <span class="brand brand-font">PLANETA <span>FLIX</span></span>
+  </a>
+  <nav>
+    <a href="descobrir.html">Escolher</a>
+    <a href="favoritos.html">Favoritos</a>
+    <a href="cadastro.html">Entrar</a>
+  </nav>
+</header>
+
+<div class="demo-banner" id="demo-banner">
+  Modo demonstração — exibindo catálogo de exemplo até as chaves de API serem adicionadas em <code>config.js</code>.
+</div>
+
+<section class="hero">
+  <h1 class="brand-font">Não sabe o que assistir?</h1>
+  <p>Marque os serviços que você assina, diga quanto tempo tem — e escolha entre ver as opções ou deixar o sorteio decidir.</p>
+</section>
+
+<main class="container">
+
+  <div class="filters-card">
+    <div class="filter-block">
+      <div class="filter-label">O que você quer ver</div>
+      <div class="chip-row">
+        <button type="button" class="chip on" data-tipo="movie">Filme</button>
+        <button type="button" class="chip" data-tipo="tv">Série</button>
+      </div>
+    </div>
+
+    <div class="filter-block" id="providers-block" style="display:none;">
+      <div class="filter-label">Onde você já assina</div>
+      <div class="chip-row" id="providers-row"></div>
+      <p class="filter-hint">Fica salvo neste aparelho — na próxima visita já vem marcado.</p>
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-block">
+        <div class="filter-label">Gênero</div>
+        <select class="filter-select" id="filtro-genero">
+          <option value="">Qualquer gênero</option>
+        </select>
+      </div>
+
+      <div class="filter-block" id="duracao-block">
+        <div class="filter-label">Tempo que você tem</div>
+        <select class="filter-select" id="filtro-duracao">
+          <option value="">Tanto faz</option>
+          <option value="90">Até 1h30</option>
+          <option value="120">Até 2h</option>
+          <option value="150">Até 2h30</option>
+        </select>
+      </div>
+
+      <div class="filter-block">
+        <div class="filter-label">Nota mínima</div>
+        <select class="filter-select" id="filtro-nota">
+          <option value="">Qualquer nota</option>
+          <option value="6">6 ou mais</option>
+          <option value="7">7 ou mais</option>
+          <option value="8">8 ou mais</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button type="button" class="btn-primary" id="btn-ver-opcoes">Ver opções</button>
+      <button type="button" class="btn-ghost" id="btn-sortear">🎲 Escolhe por mim</button>
+    </div>
+  </div>
+
+  <div class="section-title">Para hoje à noite</div>
+  <div class="resultado-status" id="resultado-status"></div>
+  <div id="resultado-area">
+    <div class="empty-state">Ajuste os filtros acima para começar.</div>
+  </div>
+
+  <p class="where-attribution">Disponibilidade por serviço fornecida por <strong>JustWatch</strong> via TMDb.</p>
+</main>
+
+<footer>Planeta Flix · MVL de Curadoria · Fase 1 de 3 (Curadoria → Analítica → Locadora)</footer>
+
+<script src="config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/tmdb.js"></script>
+<script src="assets/js/omdb.js"></script>
+<script src="assets/js/titleService.js"></script>
+<script src="assets/js/descobrir.js"></script>
+</body>
+</html>
