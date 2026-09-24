@@ -231,11 +231,27 @@ async function tmdbPersonDetails(id) {
    ------------------------------------------------------------------ */
 
 /** Serviços de streaming disponíveis na região, na ordem de relevância do TMDb. */
+/* Lojas de aluguel/compra e agregadores gratuitos. Aparecem bem no topo da lista
+   do Brasil, mas ninguém "assina" a Apple TV Store ou o Google Play — e, como a
+   descoberta filtra por flatrate (incluso na assinatura), marcá-los não devolveria
+   nada. Ficam de fora dos chips de "onde você já assina". */
+const PROVIDER_IDS_TRANSACIONAIS = [2, 3, 10, 2285];
+
+/* A ordem que vale é a da região, não a global.
+   O TMDb manda display_priority (posição GLOBAL) e display_priorities (mapa por
+   país). Ordenar pela global joga serviço brasileiro para o fim da fila: por ela,
+   o Globoplay fica em 10º empatado e a HBO Max em 28º — as duas caíam fora da
+   lista exibida, mesmo sendo das maiores do Brasil. */
+function providerPriority(p) {
+  const porRegiao = p.display_priorities && p.display_priorities[CONFIG.WATCH_REGION];
+  return porRegiao !== undefined ? porRegiao : (p.display_priority ?? 999);
+}
+
 async function tmdbWatchProviders(mediaType = "movie") {
   const data = await tmdbFetch(`/watch/providers/${mediaType}`, { watch_region: CONFIG.WATCH_REGION });
   return (data.results || [])
-    .slice()
-    .sort((a, b) => (a.display_priority ?? 999) - (b.display_priority ?? 999))
+    .filter(p => !PROVIDER_IDS_TRANSACIONAIS.includes(p.provider_id))
+    .sort((a, b) => providerPriority(a) - providerPriority(b))
     .map(p => ({
       id: p.provider_id,
       name: p.provider_name,
