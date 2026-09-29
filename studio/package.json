@@ -1,0 +1,21 @@
+{
+  "name": "planetaflix-studio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Studio editorial do Planeta Flix (Sanity)",
+  "type": "module",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity start",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "export": "sanity dataset export production ./export"
+  },
+  "dependencies": {
+    "@sanity/vision": "^3",
+    "react": "^18",
+    "react-dom": "^18",
+    "sanity": "^3",
+    "styled-components": "^6"
+  }
+}
