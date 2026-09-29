@@ -301,6 +301,7 @@ async function initTitulo() {
     return;
   }
   renderDetail(t);
+  renderArtigosRelacionados(mediaType, id);
 
   authOnStateChanged(async (user) => {
     currentUser = user;
@@ -308,6 +309,41 @@ async function initTitulo() {
     updateReviewGateUI();
     await loadReviews();
   });
+}
+
+/* ---------- "Leia sobre" — artigos que citam este título ----------
+   O índice é gerado no build (data/artigos-por-titulo.json) a partir dos
+   TMDb IDs que cada artigo declara. Consultar o Sanity a cada visita de
+   ficha seria uma chamada de rede para, quase sempre, nenhum resultado. */
+const FORMATOS_ARTIGO = { noticia: "Notícia", lista: "Lista", critica: "Crítica", guia: "Guia" };
+
+async function renderArtigosRelacionados(mediaType, id) {
+  let indice;
+  try {
+    const r = await fetch("data/artigos-por-titulo.json", { cache: "no-cache" });
+    if (!r.ok) return;                 // ainda não há build editorial: silêncio
+    indice = await r.json();
+  } catch (e) {
+    return;                            // arquivo ausente não é erro para o leitor
+  }
+
+  const artigos = indice[`${mediaType}-${id}`];
+  if (!artigos || !artigos.length) return;
+
+  const cards = artigos.map(a => `
+    <a class="artigo-relacionado" href="artigo/${a.slug}.html">
+      ${a.capa ? `<img src="${a.capa}" alt="" loading="lazy">` : `<span class="sem-capa" aria-hidden="true"></span>`}
+      <span class="artigo-relacionado-corpo">
+        <span class="artigo-relacionado-formato">${FORMATOS_ARTIGO[a.formato] || ""}</span>
+        <span class="artigo-relacionado-titulo">${a.titulo}</span>
+      </span>
+    </a>`).join("");
+
+  const secao = document.createElement("section");
+  secao.className = "bloco-leia-sobre";
+  secao.innerHTML = `<div class="section-title">Leia sobre</div>
+    <div class="artigos-relacionados">${cards}</div>`;
+  document.getElementById("detail-body").appendChild(secao);
 }
 
 document.addEventListener("DOMContentLoaded", initTitulo);

@@ -1,0 +1,11 @@
+{
+  "name": "planetaflix-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Site do Planeta Flix. Estático; o build só gera as páginas editoriais a partir do Sanity.",
+  "scripts": {
+    "build": "node scripts/build-artigos.mjs"
+  },
+  "engines": { "node": ">=18" }
+}

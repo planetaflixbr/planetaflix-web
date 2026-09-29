@@ -461,3 +461,154 @@ footer{text-align:center;color:var(--muted);font-size:11.5px;padding:30px 20px 5
   .caminho{padding:22px 20px 24px;}
   .caminho h2{font-size:22px;}
 }
+
+/* ------------------------------------------------------------------
+   Editorial — indice e artigo
+   O texto do artigo tem largura maxima propria (~68 caracteres por linha).
+   Imagens, video e card de titulo escapam dessa largura de proposito: sao
+   respiros visuais dentro de um bloco longo de leitura.
+   ------------------------------------------------------------------ */
+.hero-editorial{padding-bottom:8px;}
+.hero-editorial h1{font-size:40px;}
+
+.editorial-destaque{margin-bottom:28px;}
+.editorial-destaque .card-artigo{grid-template-columns:1.25fr 1fr; align-items:stretch;}
+.editorial-destaque .card-artigo h3{font-size:24px;}
+
+.grid-artigos{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px;
+}
+.card-artigo{
+  display:grid; grid-template-columns:1fr; text-decoration:none; color:inherit;
+  background:var(--card); border:1px solid var(--borda); border-radius:16px;
+  overflow:hidden; transition:transform .15s ease, box-shadow .15s ease;
+}
+.card-artigo:hover{transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.09);}
+.card-artigo-capa{background:#dfe7e6; aspect-ratio:16/9;}
+.card-artigo-capa img{width:100%; height:100%; object-fit:cover; display:block;}
+.card-artigo-sem-capa{width:100%; height:100%; background:linear-gradient(160deg,#2a4a48,#1e858d);}
+.card-artigo-corpo{padding:16px 18px 18px; display:flex; flex-direction:column; gap:7px;}
+.card-artigo-formato{
+  margin:0; font-size:11px; font-weight:800; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--turquesa);
+}
+.card-artigo h3{margin:0; font-size:18px; line-height:1.3; color:var(--verde-escuro);}
+.card-artigo-chamada{margin:0; font-size:13.5px; line-height:1.5; color:var(--muted);}
+.card-artigo-pe{margin:auto 0 0; padding-top:6px; font-size:12px; color:var(--muted);}
+
+.selo{
+  display:inline-block; font-size:11px; font-weight:800; letter-spacing:.06em;
+  text-transform:uppercase; padding:4px 10px; border-radius:999px; margin-right:6px;
+  background:var(--turquesa); color:#fff;
+}
+.selo-verde-escuro{background:var(--verde-escuro);}
+.selo-dourado{background:var(--dourado); color:var(--verde-escuro);}
+
+/* ---- artigo ---- */
+.artigo{max-width:1120px; margin:0 auto; padding:22px 20px 40px;}
+.artigo-topo{max-width:720px; margin:0 auto 22px;}
+.artigo-trilha{margin:0 0 12px; font-size:12.5px; color:var(--muted);}
+.artigo-trilha a{color:var(--turquesa);}
+.artigo-selos{margin-bottom:10px;}
+.artigo h1{font-size:38px; line-height:1.18; color:var(--verde-escuro); margin:0 0 12px;}
+.artigo-chamada{font-size:17.5px; line-height:1.55; color:var(--muted); margin:0 0 16px;}
+.artigo-assinatura{
+  display:flex; flex-wrap:wrap; gap:10px; align-items:baseline;
+  font-size:13px; color:var(--muted); margin:0;
+  border-top:1px solid var(--borda); padding-top:12px;
+}
+.artigo-assinatura strong{color:var(--texto);}
+.artigo-atualizado{font-style:italic;}
+
+.artigo-capa{margin:0 0 26px;}
+/* Sem teto, uma capa 16:9 com 1120px de largura ocupa ~630px de altura e
+   empurra o texto inteiro para fora da primeira tela. */
+.artigo-capa img{width:100%; max-height:440px; object-fit:cover; border-radius:16px; display:block;}
+.artigo-capa figcaption, .img-artigo figcaption, .video-yt figcaption{
+  font-size:12.5px; color:var(--muted); padding-top:8px;
+}
+.credito{opacity:.75;}
+
+.artigo-corpo{max-width:720px; margin:0 auto; font-size:17px; line-height:1.7;}
+.artigo-corpo p{margin:0 0 20px;}
+.artigo-corpo h2{font-size:25px; line-height:1.3; color:var(--verde-escuro); margin:34px 0 12px;}
+.artigo-corpo h3{font-size:20px; color:var(--verde-escuro); margin:26px 0 10px;}
+.artigo-corpo a{color:var(--turquesa);}
+.artigo-corpo ul, .artigo-corpo ol{margin:0 0 20px; padding-left:22px;}
+.artigo-corpo li{margin-bottom:8px;}
+.artigo-corpo blockquote{
+  margin:26px 0; padding:4px 0 4px 20px; border-left:4px solid var(--dourado);
+  font-size:19px; line-height:1.55; color:var(--verde-escuro);
+}
+.citacao cite{display:block; margin-top:10px; font-size:13.5px; color:var(--muted); font-style:normal;}
+
+/* Imagem, video e lista saem da coluna de texto — ate o limite do artigo. */
+.img-artigo, .video-yt, .lista-ranqueada{
+  margin:28px calc((720px - min(940px, 100%)) / 2);
+  max-width:min(940px, 100%);
+}
+.img-artigo img{width:100%; border-radius:14px; display:block;}
+.video-yt iframe{width:100%; aspect-ratio:16/9; border:0; border-radius:14px; display:block;}
+
+.lista-ranqueada{list-style:none; padding:0; counter-reset:none;}
+.item-lista{display:flex; gap:16px; padding:18px 0; border-top:1px solid var(--borda);}
+.item-pos{
+  flex:0 0 42px; font-size:30px; font-weight:800; line-height:1;
+  color:var(--dourado); font-variant-numeric:tabular-nums;
+}
+.item-nome{margin:0 0 6px; font-size:19px; color:var(--verde-escuro);}
+.item-lista p{margin:0 0 10px; font-size:16px;}
+
+/* ---- card de titulo dentro do texto ---- */
+.card-titulo{
+  display:flex; gap:18px; margin:30px 0; padding:18px;
+  background:var(--card); border:1px solid var(--borda); border-radius:16px;
+}
+.card-titulo-poster{
+  flex:0 0 110px; aspect-ratio:2/3; border-radius:10px; background:#dfe7e6;
+  background-size:cover; background-position:center;
+}
+.card-titulo-corpo{display:flex; flex-direction:column; gap:6px; min-width:0;}
+.card-titulo-rotulo{
+  margin:0; font-size:10.5px; font-weight:800; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--turquesa);
+}
+.card-titulo-nome{margin:0; font-size:20px; color:var(--verde-escuro); line-height:1.25;}
+.card-titulo-meta{margin:0; font-size:13px; color:var(--muted);}
+.card-titulo-nota{margin:4px 0 0; font-size:14.5px; line-height:1.5;}
+.card-titulo-onde{margin:0; font-size:13px; color:var(--muted);}
+.card-titulo-link{margin-top:auto; padding-top:6px; font-size:13.5px; color:var(--turquesa); text-decoration:none;}
+/* Enquanto não hidrata, o card não finge ter dados que ainda não tem. */
+.card-titulo .card-titulo-meta:empty, .card-titulo .card-titulo-onde:empty{display:none;}
+.card-titulo.inline{max-width:520px;}
+
+@media (max-width:760px){
+  .artigo h1{font-size:29px;}
+  .artigo-corpo{font-size:16.5px;}
+  .img-artigo, .video-yt, .lista-ranqueada{margin-left:0; margin-right:0;}
+  .card-titulo{flex-direction:column;}
+  .card-titulo-poster{flex:0 0 auto; width:120px;}
+  .editorial-destaque .card-artigo{grid-template-columns:1fr;}
+}
+
+/* Bloco "Leia sobre" na ficha do título */
+.bloco-leia-sobre{margin-top:34px;}
+.artigos-relacionados{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px;
+}
+.artigo-relacionado{
+  display:flex; gap:12px; align-items:center; text-decoration:none; color:inherit;
+  background:var(--card); border:1px solid var(--borda); border-radius:12px;
+  padding:10px; transition:transform .15s ease;
+}
+.artigo-relacionado:hover{transform:translateY(-2px);}
+.artigo-relacionado img, .artigo-relacionado .sem-capa{
+  flex:0 0 76px; width:76px; height:48px; border-radius:8px; object-fit:cover;
+  background:linear-gradient(160deg,#2a4a48,#1e858d);
+}
+.artigo-relacionado-corpo{display:flex; flex-direction:column; gap:3px; min-width:0;}
+.artigo-relacionado-formato{
+  font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--turquesa);
+}
+.artigo-relacionado-titulo{font-size:13.5px; line-height:1.35; font-weight:600;}

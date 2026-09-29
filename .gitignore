@@ -13,3 +13,8 @@ studio/.env.local
 # sistema
 .DS_Store
 Thumbs.db
+
+# gerados pelo build editorial (npm run build)
+planetaflix-web/artigo/
+planetaflix-web/artigos.html
+planetaflix-web/data/artigos-por-titulo.json
