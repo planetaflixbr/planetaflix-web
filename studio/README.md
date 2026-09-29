@@ -36,7 +36,11 @@ npm run deploy     # vira https://planetaflix.sanity.studio
 | `schemas/objects/videoYoutube.js` | Embed de YouTube com validacao de link |
 | `schemas/objects/imagemLegenda.js` | Imagem com alt, legenda e credito |
 | `schemas/objects/listaRanqueada.js` | Lista numerada (formato "lista") |
-| `queries.js` | As consultas GROQ que o build do site usa |
+
+As consultas GROQ **não** ficam aqui: elas vivem em
+`planetaflix-web/scripts/sanity.mjs`, junto do build que as usa. Duas cópias da
+mesma consulta em pastas diferentes é a receita para uma divergir da outra sem
+ninguém perceber.
 
 ## A regra que sustenta o resto
 
