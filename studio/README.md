@@ -51,9 +51,21 @@ e montar o bloco "Leia sobre" sem nenhum cadastro manual.
 
 ## Falta configurar no painel do Sanity (sanity.io/manage)
 
-1. **CORS** — em *API > CORS origins*, adicionar `https://planetaflix.com`,
-   `https://www.planetaflix.com` e `http://localhost:*`, todos **sem**
-   credenciais (o dataset e publico).
+1. **CORS** — em *API > CORS origins*. O Sanity nao aceita curinga de porta
+   (`localhost:*`); o `*` so vale em posicao de subdominio. Cadastre origem por
+   origem:
+
+   | Origem | Para que | Credenciais |
+   |---|---|---|
+   | `http://localhost:3333` | Studio em `sanity dev` | **sim** |
+   | `http://localhost:5500` | site local no Live Server | nao |
+   | `https://planetaflix.com` | producao | nao |
+   | `https://www.planetaflix.com` | producao | nao |
+   | `https://*.vercel.app` | previews da Vercel (aqui o curinga funciona) | nao |
+
+   O `http://localhost:3333` costuma ja existir, criado junto com o projeto.
+   As origens do site ficam **sem** credenciais: o dataset e publico e a
+   leitura nao usa token.
 2. **Webhook de publicacao** — em *API > Webhooks*, criar um webhook para o
    Deploy Hook da Vercel, com filtro `_type == "artigo"` e disparo em
    create/update/delete. E isso que faz o site se reconstruir quando um artigo
