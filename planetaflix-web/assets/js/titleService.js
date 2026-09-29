@@ -11,16 +11,48 @@ function isDemoMode() {
   return !tmdbEnabled();
 }
 
-async function svcTrending() {
-  if (isDemoMode()) {
-    return MOCK_TITLES.slice(0, 6).map(t => ({ ...t }));
+/* ---------- Home em blocos ---------- */
+
+const ITENS_POR_BLOCO = 12;
+
+/* Intercala filme e série em vez de concatenar: sem isso o bloco inteiro
+   viraria filme, porque a lista de filmes chega primeiro e já preenche o
+   limite sozinha. */
+function intercalar(a, b) {
+  const saida = [];
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (a[i]) saida.push(a[i]);
+    if (b[i]) saida.push(b[i]);
   }
+  return saida;
+}
+
+async function svcBlocoHome(bloco) {
+  if (isDemoMode()) return blocoMock(bloco);
   try {
-    return await tmdbTrending();
+    const [filmes, series] = await Promise.all([
+      tmdbBlocoHome(bloco, "movie"),
+      tmdbBlocoHome(bloco, "tv"),
+    ]);
+    // Sem cartaz o card vira um retângulo escuro com o nome — comum em títulos
+    // ainda não lançados, que é justamente o bloco "Em breve".
+    return intercalar(filmes, series)
+      .filter(t => t.poster)
+      .slice(0, ITENS_POR_BLOCO);
   } catch (e) {
-    console.warn("TMDb indisponível, usando catálogo de exemplo.", e);
-    return MOCK_TITLES.slice(0, 6).map(t => ({ ...t }));
+    console.warn(`TMDb indisponível no bloco "${bloco}", usando catálogo de exemplo.`, e);
+    return blocoMock(bloco);
   }
+}
+
+/* O catálogo de exemplo guarda só o ano, não a data de lançamento, então no
+   modo demonstração os blocos são fatias fixas do mock: servem para conferir o
+   layout, não a regra de cada bloco. */
+function blocoMock(bloco) {
+  const ordem = { lancamentos: 0, comentados: 1, embreve: 2, catalogo: 3 };
+  const i = ordem[bloco] !== undefined ? ordem[bloco] : 0;
+  const tam = Math.max(2, Math.ceil(MOCK_TITLES.length / 4));
+  return MOCK_TITLES.slice(i * tam, i * tam + tam).map(t => ({ ...t, poster: null }));
 }
 
 async function svcSearch(query) {

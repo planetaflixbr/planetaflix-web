@@ -20,12 +20,6 @@ async function tmdbFetch(path, params = {}) {
   return res.json();
 }
 
-/** Trending da semana (filmes + séries) para a home. */
-async function tmdbTrending() {
-  const data = await tmdbFetch("/trending/all/week");
-  return (data.results || []).map(mapTmdbSummary);
-}
-
 /** Busca multi (filme, série e pessoa) pelo termo digitado. */
 async function tmdbSearch(query) {
   const data = await tmdbFetch("/search/multi", { query, include_adult: "false" });
@@ -324,4 +318,75 @@ function slugify(title, dateStr) {
     .normalize("NFD").replace(/\p{Diacritic}/gu, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
   return year ? `${base}-${year}` : base;
+}
+
+/* ------------------------------------------------------------------
+   Home em blocos
+   Cada bloco da home e uma janela sobre o /discover. O TMDb nomeia o
+   campo de data de forma diferente para filme e serie
+   (primary_release_date x first_air_date), entao o campo e escolhido
+   junto com o mediaType.
+   ------------------------------------------------------------------ */
+
+/* Fronteira entre "Lancamentos" e "Catalogo". Mexer aqui move os dois blocos
+   de uma vez — por isso e uma constante so. */
+const JANELA_LANCAMENTO_MESES = 3;
+
+/* "Mais comentados": na regua de 5 estrelas do Planeta Flix o alvo era 4,5,
+   que no TMDb (0 a 10) equivale a ~9 — nota que pouquissimos titulos alcancam.
+   7,5 mantem o bloco exigente sem deixa-lo vazio. O piso de votos e o que
+   separa "muito comentado" de "nota alta sustentada por 20 pessoas". */
+const COMENTADOS_NOTA_MIN = 7.5;
+const COMENTADOS_VOTOS_MIN = 500;
+
+/* Catalogo e o acervo antigo, nao o arquivo morto: sem um piso de votos ele
+   vira uma lista de titulos que ninguem viu. */
+const CATALOGO_VOTOS_MIN = 300;
+
+function dataIso(d) {
+  return d.toISOString().slice(0, 10);
+}
+function daquiAMeses(meses) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + meses);
+  return d;
+}
+function daquiADias(dias) {
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  return d;
+}
+
+function paramsDoBloco(bloco, mediaType) {
+  const campo = mediaType === "tv" ? "first_air_date" : "primary_release_date";
+  const hoje = dataIso(new Date());
+  const corte = dataIso(daquiAMeses(-JANELA_LANCAMENTO_MESES));
+
+  switch (bloco) {
+    case "lancamentos":
+      return { [`${campo}.gte`]: corte, [`${campo}.lte`]: hoje, sort_by: "popularity.desc" };
+    case "comentados":
+      return {
+        "vote_average.gte": String(COMENTADOS_NOTA_MIN),
+        "vote_count.gte": String(COMENTADOS_VOTOS_MIN),
+        sort_by: "vote_count.desc",
+      };
+    case "embreve":
+      // A partir de amanha: hoje ja pertence a "Lancamentos".
+      return { [`${campo}.gte`]: dataIso(daquiADias(1)), sort_by: "popularity.desc" };
+    case "catalogo":
+      return { [`${campo}.lte`]: corte, "vote_count.gte": String(CATALOGO_VOTOS_MIN), sort_by: "popularity.desc" };
+    default:
+      return { sort_by: "popularity.desc" };
+  }
+}
+
+async function tmdbBlocoHome(bloco, mediaType = "movie") {
+  const data = await tmdbFetch(`/discover/${mediaType}`, {
+    watch_region: CONFIG.WATCH_REGION,
+    include_adult: "false",
+    page: "1",
+    ...paramsDoBloco(bloco, mediaType),
+  });
+  return (data.results || []).map(r => mapTmdbSummary({ ...r, media_type: mediaType }));
 }

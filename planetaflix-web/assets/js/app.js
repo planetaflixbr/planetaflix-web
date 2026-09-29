@@ -12,15 +12,44 @@ function titleCardHtml(t) {
   `;
 }
 
-async function renderTrending() {
-  const grid = document.getElementById("trending-grid");
-  grid.innerHTML = `<div class="empty-state">Carregando títulos em alta…</div>`;
-  const items = await svcTrending();
-  if (!items.length) {
-    grid.innerHTML = `<div class="empty-state">Não foi possível carregar o catálogo agora.</div>`;
+/* A home é dividida em quatro blocos (ver index.html). Cada um custa duas
+   chamadas ao TMDb — filme e série —, então carregá-los todos de uma vez
+   seriam oito requisições antes da primeira rolagem. Em vez disso cada bloco
+   busca os seus títulos quando chega perto da tela. */
+async function carregarBloco(secao) {
+  if (secao.dataset.carregado) return;
+  secao.dataset.carregado = "1";
+
+  const grid = secao.querySelector(".grid-titles");
+  const bloco = secao.dataset.bloco;
+  grid.innerHTML = `<div class="empty-state">Carregando…</div>`;
+
+  const itens = await svcBlocoHome(bloco);
+  if (!itens.length) {
+    grid.innerHTML = `<div class="empty-state">Nenhum título neste bloco agora.</div>`;
     return;
   }
-  grid.innerHTML = items.map(titleCardHtml).join("");
+  grid.innerHTML = itens.map(titleCardHtml).join("");
+}
+
+function initBlocos() {
+  const secoes = [...document.querySelectorAll(".home-block")];
+  if (!secoes.length) return;
+
+  if (!("IntersectionObserver" in window)) {
+    secoes.forEach(carregarBloco);
+    return;
+  }
+
+  const observador = new IntersectionObserver((entradas, obs) => {
+    entradas.forEach((entrada) => {
+      if (!entrada.isIntersecting) return;
+      obs.unobserve(entrada.target);
+      carregarBloco(entrada.target);
+    });
+  }, { rootMargin: "200px" }); // começa a buscar um pouco antes do bloco aparecer
+
+  secoes.forEach((s) => observador.observe(s));
 }
 
 function resultRowHtml(t) {
@@ -71,7 +100,7 @@ function debounce(fn, delay) {
 let searchToken = 0;
 
 async function runSearch(query) {
-  const trendingSection = document.getElementById("trending-section");
+  const blocosSection = document.getElementById("blocos-home");
   const resultsSection = document.getElementById("results-section");
   const resultsList = document.getElementById("results-list");
   const resultsTitle = document.getElementById("results-title");
@@ -79,12 +108,12 @@ async function runSearch(query) {
   const myToken = ++searchToken;
 
   if (!query.trim()) {
-    trendingSection.style.display = "";
+    blocosSection.style.display = "";
     resultsSection.style.display = "none";
     return;
   }
 
-  trendingSection.style.display = "none";
+  blocosSection.style.display = "none";
   resultsSection.style.display = "";
   resultsTitle.textContent = `Resultados para "${query}"`;
   resultsList.innerHTML = `<div class="empty-state">Buscando…</div>`;
@@ -108,7 +137,7 @@ function initHome() {
   const banner = document.getElementById("demo-banner");
   if (isDemoMode()) banner.classList.add("show");
 
-  renderTrending();
+  initBlocos();
 
   const form = document.getElementById("search-form");
   const input = document.getElementById("search-input");

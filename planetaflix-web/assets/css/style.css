@@ -93,15 +93,27 @@ img{max-width:100%;display:block;}
   font-size:14px; font-weight:800; color:var(--verde-escuro); text-transform:uppercase;
   letter-spacing:.05em; margin:34px 0 14px;
 }
+/* Blocos da home (Lancamentos, Mais comentados, Em breve, Catalogo) */
+.home-block .section-title{margin-bottom:4px;}
+.section-sub{font-size:12.5px; color:var(--muted); margin:0 0 14px;}
+/* A grade reserva a altura de uma fileira de cartazes antes de ter conteudo.
+   Sem isso os quatro blocos vazios cabem juntos na tela, o observador dispara
+   todos de uma vez e as oito chamadas voltam a sair no mesmo instante — alem
+   de a pagina pular quando cada bloco chega. */
+.home-block .grid-titles{min-height:236px;}
 
 /* Grid de títulos */
 .grid-titles{
   display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:16px;
 }
 .title-card{
-  border-radius:var(--radius); overflow:hidden; cursor:pointer; background:#111;
+  border-radius:var(--radius); overflow:hidden; cursor:pointer; background-color:#111;
   aspect-ratio:2/3; position:relative; box-shadow:0 6px 16px rgba(0,0,0,.15);
   transition:transform .15s ease;
+  /* O cartaz entra por background-image no HTML (app.js). Sem estas tres linhas
+     ele desenha em tamanho natural (500x750) dentro de um card de ~150x225 e so
+     aparece o canto superior esquerdo — era a "imagem cortada". */
+  background-size:cover; background-position:center; background-repeat:no-repeat;
 }
 .title-card:hover{transform:translateY(-4px);}
 .title-card img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
