@@ -322,26 +322,49 @@ function slugify(title, dateStr) {
 
 /* ------------------------------------------------------------------
    Home em blocos
-   Cada bloco da home e uma janela sobre o /discover. O TMDb nomeia o
-   campo de data de forma diferente para filme e serie
-   (primary_release_date x first_air_date), entao o campo e escolhido
-   junto com o mediaType.
+
+   Cada bloco e uma janela de data sobre o /discover. A escolha do campo
+   de data e a decisao mais importante daqui, e ela e diferente para
+   filme e serie:
+
+   FILME — a pergunta certa nao e "quando estreou no mundo", e sim
+   "quando ficou possivel ver em casa, no Brasil". Isso e a data de
+   lancamento digital brasileira (region=BR + with_release_type=4).
+   Toy Story 5, por exemplo, estreou no mundo em 17/06 e so ficou
+   digital no Brasil em 23/09 — pela data primaria ele nao aparecia
+   como lancamento no dia em que virou assistivel.
+   O problema e cobertura: cerca de tres quartos dos filmes do
+   streaming brasileiro nao tem essa data registrada no TMDb, e a
+   falta e por porte (os grandes tem, os pequenos nao). Por isso cada
+   bloco de filme faz DUAS consultas: a da data digital primeiro, a da
+   data primaria como reserva. A uniao mantem o bloco correto sem
+   perder os 87% de titulos que a data digital nao alcanca.
+
+   SERIE — nao existe data digital brasileira na API. O analogo e
+   air_date (episodio no ar), nao first_air_date (estreia da serie):
+   pelo segundo, temporada nova de serie antiga nunca conta, e some
+   justamente o que puxa audiencia (Reacher, Simpsons, Lioness).
+   Sao 564 series com episodio novo em 3 meses contra 202 pelo campo
+   antigo.
    ------------------------------------------------------------------ */
 
-/* Fronteira entre "Lancamentos" e "Catalogo". Mexer aqui move os dois blocos
-   de uma vez — por isso e uma constante so. */
+/* Fronteira entre "Lancamentos" e "Catalogo". */
 const JANELA_LANCAMENTO_MESES = 3;
 
-/* "Mais comentados": na regua de 5 estrelas do Planeta Flix o alvo era 4,5,
-   que no TMDb (0 a 10) equivale a ~9 — nota que pouquissimos titulos alcancam.
-   7,5 mantem o bloco exigente sem deixa-lo vazio. O piso de votos e o que
-   separa "muito comentado" de "nota alta sustentada por 20 pessoas". */
+/* "Mais comentados do ano": na regua de 5 estrelas do Planeta Flix o alvo era
+   4,5, que no TMDb (0 a 10) equivale a ~9 — nota que quase nenhum titulo
+   alcanca. 7,5 com piso de 100 votos mantem o bloco exigente e com volume:
+   da 42 filmes e 205 series no ano corrente. Subir o piso para 500 votos
+   derrubaria para 28 e 97, apertado demais para 12 vagas. */
 const COMENTADOS_NOTA_MIN = 7.5;
-const COMENTADOS_VOTOS_MIN = 500;
+const COMENTADOS_VOTOS_MIN = 100;
 
-/* Catalogo e o acervo antigo, nao o arquivo morto: sem um piso de votos ele
-   vira uma lista de titulos que ninguem viu. */
+/* Catalogo e o acervo antigo, nao o arquivo morto: sem piso de votos ele vira
+   uma lista de titulos que ninguem viu. */
 const CATALOGO_VOTOS_MIN = 300;
+
+/* Tipo 4 = lancamento digital, na tabela de release types do TMDb. */
+const TIPO_LANCAMENTO_DIGITAL = "4";
 
 function dataIso(d) {
   return d.toISOString().slice(0, 10);
@@ -356,37 +379,89 @@ function daquiADias(dias) {
   d.setDate(d.getDate() + dias);
   return d;
 }
+const hojeIso = () => dataIso(new Date());
+const corteIso = () => dataIso(daquiAMeses(-JANELA_LANCAMENTO_MESES));
+const amanhaIso = () => dataIso(daquiADias(1));
+const inicioDoAnoIso = () => `${new Date().getFullYear()}-01-01`;
 
-function paramsDoBloco(bloco, mediaType) {
-  const campo = mediaType === "tv" ? "first_air_date" : "primary_release_date";
-  const hoje = dataIso(new Date());
-  const corte = dataIso(daquiAMeses(-JANELA_LANCAMENTO_MESES));
+const QUALIDADE = {
+  "vote_average.gte": String(COMENTADOS_NOTA_MIN),
+  "vote_count.gte": String(COMENTADOS_VOTOS_MIN),
+  sort_by: "vote_count.desc",
+};
 
-  switch (bloco) {
-    case "lancamentos":
-      return { [`${campo}.gte`]: corte, [`${campo}.lte`]: hoje, sort_by: "popularity.desc" };
-    case "comentados":
-      return {
-        "vote_average.gte": String(COMENTADOS_NOTA_MIN),
-        "vote_count.gte": String(COMENTADOS_VOTOS_MIN),
-        sort_by: "vote_count.desc",
-      };
-    case "embreve":
-      // A partir de amanha: hoje ja pertence a "Lancamentos".
-      return { [`${campo}.gte`]: dataIso(daquiADias(1)), sort_by: "popularity.desc" };
-    case "catalogo":
-      return { [`${campo}.lte`]: corte, "vote_count.gte": String(CATALOGO_VOTOS_MIN), sort_by: "popularity.desc" };
-    default:
-      return { sort_by: "popularity.desc" };
+/* Para cada bloco, a lista de consultas por tipo de midia. Em filme a
+   primeira consulta e sempre a da data digital brasileira: ela tem
+   prioridade na hora de juntar, porque e a informacao melhor. */
+const BLOCOS_HOME = {
+  lancamentos: {
+    movie: [
+      () => ({ region: "BR", with_release_type: TIPO_LANCAMENTO_DIGITAL,
+               "release_date.gte": corteIso(), "release_date.lte": hojeIso() }),
+      () => ({ "primary_release_date.gte": corteIso(), "primary_release_date.lte": hojeIso() }),
+    ],
+    tv: [
+      () => ({ "air_date.gte": corteIso(), "air_date.lte": hojeIso() }),
+    ],
+  },
+
+  comentados: {
+    movie: [
+      () => ({ region: "BR", with_release_type: TIPO_LANCAMENTO_DIGITAL,
+               "release_date.gte": inicioDoAnoIso(), "release_date.lte": hojeIso(), ...QUALIDADE }),
+      () => ({ "primary_release_date.gte": inicioDoAnoIso(), "primary_release_date.lte": hojeIso(), ...QUALIDADE }),
+    ],
+    tv: [
+      () => ({ "air_date.gte": inicioDoAnoIso(), "air_date.lte": hojeIso(), ...QUALIDADE }),
+    ],
+  },
+
+  /* Titulo que ainda nao estreou nao esta em servico nenhum, entao filtrar por
+     assinatura aqui devolveria lista vazia. */
+  embreve: {
+    semStreaming: true,
+    movie: [() => ({ "primary_release_date.gte": amanhaIso() })],
+    tv: [() => ({ "first_air_date.gte": amanhaIso() })],
+  },
+
+  catalogo: {
+    movie: [
+      () => ({ region: "BR", with_release_type: TIPO_LANCAMENTO_DIGITAL,
+               "release_date.lte": corteIso(), "vote_count.gte": String(CATALOGO_VOTOS_MIN) }),
+      () => ({ "primary_release_date.lte": corteIso(), "vote_count.gte": String(CATALOGO_VOTOS_MIN) }),
+    ],
+    tv: [
+      () => ({ "air_date.lte": corteIso(), "vote_count.gte": String(CATALOGO_VOTOS_MIN) }),
+    ],
+  },
+};
+
+async function discoverBloco(mediaType, params, comStreaming) {
+  const base = { include_adult: "false", page: "1", sort_by: "popularity.desc" };
+  if (comStreaming) {
+    base.watch_region = CONFIG.WATCH_REGION;
+    base.with_watch_monetization_types = "flatrate";
   }
+  const data = await tmdbFetch(`/discover/${mediaType}`, { ...base, ...params });
+  return (data.results || []).map(r => mapTmdbSummary({ ...r, media_type: mediaType }));
 }
 
 async function tmdbBlocoHome(bloco, mediaType = "movie") {
-  const data = await tmdbFetch(`/discover/${mediaType}`, {
-    watch_region: CONFIG.WATCH_REGION,
-    include_adult: "false",
-    page: "1",
-    ...paramsDoBloco(bloco, mediaType),
-  });
-  return (data.results || []).map(r => mapTmdbSummary({ ...r, media_type: mediaType }));
+  const cfg = BLOCOS_HOME[bloco];
+  if (!cfg || !cfg[mediaType]) return [];
+
+  const listas = await Promise.all(
+    cfg[mediaType].map(monta => discoverBloco(mediaType, monta(), !cfg.semStreaming))
+  );
+
+  // A ordem das listas importa: a primeira e a fonte melhor, e quem
+  // aparecer nela nao e substituido pela reserva.
+  const vistos = new Set();
+  const saida = [];
+  listas.forEach(lista => lista.forEach(t => {
+    if (vistos.has(t.id)) return;
+    vistos.add(t.id);
+    saida.push(t);
+  }));
+  return saida;
 }

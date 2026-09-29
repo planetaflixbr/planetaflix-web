@@ -16,6 +16,11 @@ function titleCardHtml(t) {
    chamadas ao TMDb — filme e série —, então carregá-los todos de uma vez
    seriam oito requisições antes da primeira rolagem. Em vez disso cada bloco
    busca os seus títulos quando chega perto da tela. */
+/* Os blocos entram numa fila em vez de buscarem em paralelo. Não é só para
+   aliviar a API: o bloco de baixo precisa saber o que o de cima já mostrou
+   para não repetir o mesmo título (ver jaExibidos no titleService). */
+let filaBlocos = Promise.resolve();
+
 async function carregarBloco(secao) {
   if (secao.dataset.carregado) return;
   secao.dataset.carregado = "1";
@@ -24,7 +29,7 @@ async function carregarBloco(secao) {
   const bloco = secao.dataset.bloco;
   grid.innerHTML = `<div class="empty-state">Carregando…</div>`;
 
-  const itens = await svcBlocoHome(bloco);
+  const itens = await (filaBlocos = filaBlocos.then(() => svcBlocoHome(bloco)));
   if (!itens.length) {
     grid.innerHTML = `<div class="empty-state">Nenhum título neste bloco agora.</div>`;
     return;

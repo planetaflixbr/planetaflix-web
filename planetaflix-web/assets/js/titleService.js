@@ -27,6 +27,14 @@ function intercalar(a, b) {
   return saida;
 }
 
+/* Os blocos são janelas sobre o mesmo acervo, não gavetas: um filme com
+   lançamento digital recente e estreia mundial antiga cabe em Lançamentos e
+   em Catálogo ao mesmo tempo (Toy Story 5 é exatamente esse caso). Guardamos
+   o que já foi mostrado para o título aparecer uma vez só, no bloco mais alto
+   da página — por isso app.js carrega os blocos em ordem, um de cada vez. */
+const jaExibidos = new Set();
+const chaveTitulo = t => `${t.mediaType}-${t.id}`;
+
 async function svcBlocoHome(bloco) {
   if (isDemoMode()) return blocoMock(bloco);
   try {
@@ -36,9 +44,14 @@ async function svcBlocoHome(bloco) {
     ]);
     // Sem cartaz o card vira um retângulo escuro com o nome — comum em títulos
     // ainda não lançados, que é justamente o bloco "Em breve".
-    return intercalar(filmes, series)
+    const escolhidos = intercalar(filmes, series)
       .filter(t => t.poster)
+      .filter(t => !jaExibidos.has(chaveTitulo(t)))
       .slice(0, ITENS_POR_BLOCO);
+    // Só o que de fato entrou na tela é marcado: o que sobrou da fatia ainda
+    // pode aparecer num bloco de baixo.
+    escolhidos.forEach(t => jaExibidos.add(chaveTitulo(t)));
+    return escolhidos;
   } catch (e) {
     console.warn(`TMDb indisponível no bloco "${bloco}", usando catálogo de exemplo.`, e);
     return blocoMock(bloco);
