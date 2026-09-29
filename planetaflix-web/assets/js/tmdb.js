@@ -305,6 +305,10 @@ function mapTmdbSummary(r) {
     year: (r.release_date || r.first_air_date || "").slice(0, 4),
     poster: r.poster_path ? TMDB_IMG_BASE + r.poster_path : null,
     bg: null,
+    // Usados para reordenar a união das consultas híbridas (ver tmdbBlocoHome).
+    popularity: r.popularity || 0,
+    voteCount: r.vote_count || 0,
+    voteAverage: r.vote_average || 0,
   };
 }
 function mapTmdbPerson(r) {
@@ -393,6 +397,12 @@ const QUALIDADE = {
 /* Para cada bloco, a lista de consultas por tipo de midia. Em filme a
    primeira consulta e sempre a da data digital brasileira: ela tem
    prioridade na hora de juntar, porque e a informacao melhor. */
+/* "Mais populares do ano" ordena por popularidade, que e uma metrica de trafego
+   dentro do TMDb e se infla com facilidade: hoje a serie mais popular do Brasil
+   tem 750 de popularidade e 19 votos. Sem um piso de votos o primeiro card da
+   home seria um titulo que praticamente ninguem avaliou. */
+const POPULARES_VOTOS_MIN = 100;
+
 const BLOCOS_HOME = {
   lancamentos: {
     movie: [
@@ -405,7 +415,23 @@ const BLOCOS_HOME = {
     ],
   },
 
+  populares: {
+    ordenarPor: "popularidade",
+    movie: [
+      () => ({ region: "BR", with_release_type: TIPO_LANCAMENTO_DIGITAL,
+               "release_date.gte": inicioDoAnoIso(), "release_date.lte": hojeIso(),
+               "vote_count.gte": String(POPULARES_VOTOS_MIN), sort_by: "popularity.desc" }),
+      () => ({ "primary_release_date.gte": inicioDoAnoIso(), "primary_release_date.lte": hojeIso(),
+               "vote_count.gte": String(POPULARES_VOTOS_MIN), sort_by: "popularity.desc" }),
+    ],
+    tv: [
+      () => ({ "air_date.gte": inicioDoAnoIso(), "air_date.lte": hojeIso(),
+               "vote_count.gte": String(POPULARES_VOTOS_MIN), sort_by: "popularity.desc" }),
+    ],
+  },
+
   comentados: {
+    ordenarPor: "votos",
     movie: [
       () => ({ region: "BR", with_release_type: TIPO_LANCAMENTO_DIGITAL,
                "release_date.gte": inicioDoAnoIso(), "release_date.lte": hojeIso(), ...QUALIDADE }),
@@ -454,8 +480,8 @@ async function tmdbBlocoHome(bloco, mediaType = "movie") {
     cfg[mediaType].map(monta => discoverBloco(mediaType, monta(), !cfg.semStreaming))
   );
 
-  // A ordem das listas importa: a primeira e a fonte melhor, e quem
-  // aparecer nela nao e substituido pela reserva.
+  // A primeira lista e a fonte melhor (data digital brasileira), entao e ela que
+  // decide quem fica quando o mesmo titulo aparece nas duas.
   const vistos = new Set();
   const saida = [];
   listas.forEach(lista => lista.forEach(t => {
@@ -463,5 +489,15 @@ async function tmdbBlocoHome(bloco, mediaType = "movie") {
     vistos.add(t.id);
     saida.push(t);
   }));
+
+  // Sem reordenar, a uniao sai na ordem das consultas: todo titulo com data
+  // digital vem antes de todo titulo sem ela, mesmo sendo menos popular. Num
+  // bloco chamado "Mais populares" isso seria uma lista simplesmente errada.
+  saida.sort(ORDENADORES[cfg.ordenarPor || "popularidade"]);
   return saida;
 }
+
+const ORDENADORES = {
+  popularidade: (a, b) => b.popularity - a.popularity,
+  votos: (a, b) => b.voteCount - a.voteCount,
+};

@@ -29,7 +29,8 @@ async function carregarBloco(secao) {
   const bloco = secao.dataset.bloco;
   grid.innerHTML = `<div class="empty-state">Carregando…</div>`;
 
-  const itens = await (filaBlocos = filaBlocos.then(() => svcBlocoHome(bloco)));
+  const tipo = secao.dataset.tipo;
+  const itens = await (filaBlocos = filaBlocos.then(() => svcBlocoHome(bloco, tipo)));
   if (!itens.length) {
     grid.innerHTML = `<div class="empty-state">Nenhum título neste bloco agora.</div>`;
     return;
