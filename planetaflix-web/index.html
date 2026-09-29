@@ -27,7 +27,7 @@
     <span class="brand brand-font">PLANETA <span>FLIX</span></span>
   </a>
   <nav>
-    <a href="descobrir.html">Escolher</a>
+    <a href="descobrir.html" class="nav-destaque">Me ajuda a escolher</a>
     <a href="favoritos.html">Favoritos</a>
     <a href="cadastro.html">Entrar</a>
   </nav>
@@ -40,16 +40,34 @@
 <section class="hero">
   <div class="status-pill">Em construção — lançamento em breve</div>
   <h1 class="brand-font">Antes de assistir, saiba se vale a pena.</h1>
-  <p>Pesquise um filme ou série e veja a nota consolidada, elenco e em quais streamings está disponível no Brasil — sem trocar de app.</p>
+  <p>Comece por onde fizer sentido para você agora.</p>
 </section>
 
-<div class="search-wrap">
-  <form id="search-form" class="search-box">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5f6f6e" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input id="search-input" type="text" placeholder="Pesquisar título, ator, diretor..." autocomplete="off">
-    <button type="submit">Pesquisar</button>
-  </form>
-  <p class="search-alt">Não sabe o que procurar? <a href="descobrir.html">Deixa a gente ajudar a escolher ›</a></p>
+<!-- Dois caminhos com o mesmo peso. O texto nomeia o estado mental de quem
+     chega ("não faço ideia"), não o recurso ("descoberta por filtros"). -->
+<div class="dois-caminhos">
+  <section class="caminho">
+    <p class="caminho-tag">Já sei o que quero</p>
+    <h2 class="brand-font">Busque pelo nome</h2>
+    <p class="caminho-texto">Título, ator ou diretor. Você vê nota consolidada, elenco e em quais serviços está disponível no Brasil.</p>
+    <form id="search-form" class="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5f6f6e" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search-input" type="text" placeholder="Pesquisar título, ator, diretor..." autocomplete="off" aria-label="Pesquisar título, ator ou diretor">
+      <button type="submit">Pesquisar</button>
+    </form>
+  </section>
+
+  <section class="caminho caminho-escolher">
+    <p class="caminho-tag">Não faço ideia</p>
+    <h2 class="brand-font">A gente escolhe por você</h2>
+    <p class="caminho-texto">Diz o que você assina, quanto tempo tem e que humor está. A gente devolve opções — ou sorteia uma e pronto.</p>
+    <ul class="pistas">
+      <li>Onde você assina</li>
+      <li>Quanto tempo tem</li>
+      <li>Que humor está</li>
+    </ul>
+    <a class="btn-escolher" href="descobrir.html">Me ajuda a escolher</a>
+  </section>
 </div>
 
 <main class="container">

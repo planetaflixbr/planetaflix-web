@@ -8,6 +8,7 @@
   --texto:#1c2b2a;
   --muted:#5f6f6e;
   --card:#ffffff;
+  --borda:#dfe7e6;
   --radius:14px;
 }
 
@@ -403,4 +404,60 @@ footer{text-align:center;color:var(--muted);font-size:11.5px;padding:30px 20px 5
 @media (max-width:640px){
   .feature-grid{grid-template-columns:1fr;}
   .landing-hero h1{font-size:30px;}
+}
+
+/* ------------------------------------------------------------------
+   Home — dois caminhos
+   A busca pressupoe que a pessoa ja sabe o que quer. A pesquisa com
+   usuarios diz o contrario: a dor e passar o catalogo sem achar nada.
+   Os dois caminhos ficam com o mesmo peso visual, e a entrada da
+   escolha sobe tambem para o menu (.nav-destaque) para existir em
+   todas as paginas, nao so aqui.
+   ------------------------------------------------------------------ */
+.nav-destaque{
+  background:var(--dourado); color:var(--verde-escuro) !important;
+  padding:8px 16px; border-radius:999px; font-weight:700;
+}
+.nav-destaque:hover{filter:brightness(1.06);}
+
+.dois-caminhos{
+  max-width:1120px; margin:0 auto; padding:0 20px 8px;
+  display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:stretch;
+}
+.caminho{
+  background:var(--card); border:1px solid var(--borda); border-radius:18px;
+  padding:26px 26px 28px; display:flex; flex-direction:column; gap:12px;
+}
+.caminho-tag{
+  font-size:11.5px; font-weight:800; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--turquesa); margin:0;
+}
+.caminho h2{font-size:25px; color:var(--verde-escuro); margin:0;}
+.caminho-texto{font-size:14px; line-height:1.5; color:var(--muted); margin:0;}
+/* Empurra a acao para a base, para os dois cards terminarem alinhados. */
+.caminho .search-box, .caminho .btn-escolher{margin-top:auto;}
+
+.caminho-escolher{background:var(--turquesa); border-color:var(--turquesa);}
+.caminho-escolher .caminho-tag{color:var(--dourado);}
+.caminho-escolher h2{color:#fff;}
+.caminho-escolher .caminho-texto{color:rgba(255,255,255,.92);}
+
+.pistas{list-style:none; display:flex; flex-wrap:wrap; gap:8px; padding:0; margin:2px 0 0;}
+.pistas li{
+  background:var(--turquesa-dark); color:#fff; font-size:12.5px;
+  padding:7px 12px; border-radius:999px;
+}
+.btn-escolher{
+  display:inline-block; align-self:flex-start; text-decoration:none;
+  background:var(--dourado); color:var(--verde-escuro);
+  font-weight:700; font-size:15px; padding:14px 26px; border-radius:999px;
+}
+.btn-escolher:hover{filter:brightness(1.06);}
+
+/* Abaixo de 860px os dois cards empilham; a busca vem primeiro porque
+   quem ja sabe o nome nao deve rolar para encontra-la. */
+@media (max-width:860px){
+  .dois-caminhos{grid-template-columns:1fr; gap:14px;}
+  .caminho{padding:22px 20px 24px;}
+  .caminho h2{font-size:22px;}
 }
