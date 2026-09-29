@@ -36,6 +36,32 @@ async function carregarBloco(secao) {
     return;
   }
   grid.innerHTML = itens.map(titleCardHtml).join("");
+  ligarCarrossel(secao);
+}
+
+/* Rolagem lateral do bloco. As setas se escondem sozinhas nas pontas e somem de
+   vez quando os títulos já cabem na tela — seta que não leva a lugar nenhum é
+   pior que seta nenhuma. */
+function ligarCarrossel(secao) {
+  const grid = secao.querySelector(".grid-titles");
+  const esq = secao.querySelector(".carrossel-seta.esq");
+  const dir = secao.querySelector(".carrossel-seta.dir");
+  if (!grid || !esq || !dir || secao.dataset.carrossel) return;
+  secao.dataset.carrossel = "1";
+
+  // Quase uma tela por clique, deixando uma sobra para o olho não perder o fio.
+  const passo = () => Math.max(grid.clientWidth * 0.8, 200);
+  esq.addEventListener("click", () => grid.scrollBy({ left: -passo(), behavior: "smooth" }));
+  dir.addEventListener("click", () => grid.scrollBy({ left: passo(), behavior: "smooth" }));
+
+  const atualizar = () => {
+    const sobra = grid.scrollWidth - grid.clientWidth;
+    esq.hidden = grid.scrollLeft <= 2;
+    dir.hidden = sobra <= 2 || grid.scrollLeft >= sobra - 2;
+  };
+  grid.addEventListener("scroll", atualizar, { passive: true });
+  window.addEventListener("resize", atualizar);
+  atualizar();
 }
 
 function initBlocos() {

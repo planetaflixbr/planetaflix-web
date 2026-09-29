@@ -97,10 +97,48 @@ img{max-width:100%;display:block;}
 .home-block .section-title{margin-bottom:4px;}
 .section-sub{font-size:12.5px; color:var(--muted); margin:0 0 14px;}
 /* A grade reserva a altura de uma fileira de cartazes antes de ter conteudo.
-   Sem isso os quatro blocos vazios cabem juntos na tela, o observador dispara
-   todos de uma vez e as oito chamadas voltam a sair no mesmo instante — alem
-   de a pagina pular quando cada bloco chega. */
+   Sem isso os blocos vazios cabem juntos na tela, o observador dispara todos de
+   uma vez e as chamadas voltam a sair no mesmo instante — alem de a pagina
+   pular quando cada bloco chega. */
 .home-block .grid-titles{min-height:236px;}
+
+/* Carrossel — so na home. Em descobrir.html e favoritos.html a mesma classe
+   .grid-titles continua sendo grade que quebra linha, que e o certo para uma
+   lista de resultados.
+   Com 10 blocos de 10 titulos, a grade daria ~20 fileiras de cartaz. Em fileira
+   horizontal a home inteira cabe em 10. */
+.carrossel{position:relative;}
+.home-block .grid-titles{
+  display:flex; gap:14px;
+  overflow-x:auto; overflow-y:hidden;
+  scroll-snap-type:x proximity; scroll-behavior:smooth;
+  padding:4px 2px 10px;
+  scrollbar-width:thin; scrollbar-color:#c4d2d0 transparent;
+  -webkit-overflow-scrolling:touch;
+}
+.home-block .grid-titles::-webkit-scrollbar{height:6px;}
+.home-block .grid-titles::-webkit-scrollbar-thumb{background:#c4d2d0; border-radius:3px;}
+.home-block .grid-titles::-webkit-scrollbar-track{background:transparent;}
+.home-block .title-card{flex:0 0 150px; width:150px; scroll-snap-align:start;}
+.home-block .empty-state{flex:1 1 auto;}
+
+/* No celular o dedo rola a fileira; no desktop com mouse, nao — dai as setas.
+   Elas so aparecem em ponteiro preciso e quando ha para onde rolar. */
+.carrossel-seta{
+  position:absolute; top:calc(50% - 5px); transform:translateY(-50%);
+  width:34px; height:34px; padding:0; border-radius:50%;
+  border:1px solid var(--borda); background:#fff; color:var(--verde-escuro);
+  font-size:18px; line-height:1; cursor:pointer; z-index:2;
+  align-items:center; justify-content:center; display:none;
+  box-shadow:0 2px 10px rgba(0,0,0,.14);
+}
+.carrossel-seta:hover{background:var(--bg-app);}
+.carrossel-seta.esq{left:-14px;}
+.carrossel-seta.dir{right:-14px;}
+@media (hover:hover) and (pointer:fine){
+  .carrossel:hover .carrossel-seta:not([hidden]){display:flex;}
+  .carrossel-seta:focus-visible{display:flex;}
+}
 
 /* Grid de títulos */
 .grid-titles{
