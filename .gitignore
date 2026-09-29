@@ -1,0 +1,15 @@
+# dependencias e build do Studio
+studio/node_modules/
+studio/dist/
+studio/.sanity/
+studio/export/
+
+# variaveis de ambiente
+.env
+.env.local
+studio/.env
+studio/.env.local
+
+# sistema
+.DS_Store
+Thumbs.db
