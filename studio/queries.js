@@ -1,6 +1,6 @@
 /**
  * Consultas GROQ usadas pelo build estatico. Sem token: o dataset e publico.
- * Endpoint: https://sku1yl2b.apicdn.sanity.io/v2024-10-01/data/query/production?query=...
+ * Endpoint: https://sku1yl2b.apicdn.sanity.io/v2025-02-19/data/query/production?query=...
  */
 
 const CAMPOS_CARD = `

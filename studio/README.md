@@ -6,7 +6,7 @@ Projeto separado do site. O site continua sendo HTML estatico em
 - **Project ID:** `sku1yl2b`
 - **Dataset:** `production` (publico — leitura sem token)
 - **Endpoint de leitura:**
-  `https://sku1yl2b.apicdn.sanity.io/v2024-10-01/data/query/production?query=...`
+  `https://sku1yl2b.apicdn.sanity.io/v2025-02-19/data/query/production?query=...`
 
 ## Rodar localmente
 
