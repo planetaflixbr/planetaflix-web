@@ -150,6 +150,8 @@ const ok = (cond, msg) => ({ passou: !!cond, msg });
 
     res.push(ok(pedidosGoogle.length === 0,
       `nenhum pedido ao Google antes do aceite (foram ${pedidosGoogle.length})`));
+    res.push(ok(!pedidosGoogle.some((u) => u.includes("gtm.js")),
+      "GTM não é carregado antes do aceite"));
     const ev = await lerEventos(page);
     res.push(ok(ev.length === 0, `nada enviado antes do aceite (dataLayer tinha ${ev.length})`));
     res.push(ok(await page.evaluate(() => typeof window.gtag === "undefined"),
@@ -171,8 +173,13 @@ const ok = (cond, msg) => ({ passou: !!cond, msg });
     await page.waitForTimeout(600);
 
     res.push(ok(!(await page.isVisible("#pf-consentimento")), "banner sai depois do aceite"));
-    res.push(ok(pedidosGoogle.some((u) => u.includes("G-EH9HLLYG13")),
+    res.push(ok(pedidosGoogle.some((u) => u.includes("gtag/js") && u.includes("G-EH9HLLYG13")),
       "gtag.js pedido com o ID certo depois do aceite"));
+    res.push(ok(pedidosGoogle.some((u) => u.includes("gtm.js") && u.includes("GTM-PF2W5X4W")),
+      "gtm.js pedido com o container certo depois do aceite"));
+    const gtmStart = await page.evaluate(() =>
+      (window.dataLayer || []).some((e) => e && e.event === "gtm.js"));
+    res.push(ok(gtmStart, "dataLayer recebeu o gtm.start do container"));
 
     const ev = await lerEventos(page);
     const busca = ev.find((e) => e.evento === "search");
@@ -197,7 +204,7 @@ const ok = (cond, msg) => ({ passou: !!cond, msg });
     await page.click('#search-form button[type="submit"]');
     await page.waitForTimeout(700);
 
-    res.push(ok(pedidosGoogle.length === 0, "recusa: nenhum pedido ao Google"));
+    res.push(ok(pedidosGoogle.length === 0, "recusa: nenhum pedido ao Google (GA4 nem GTM)"));
     res.push(ok((await lerEventos(page)).length === 0, "recusa: nenhum evento"));
 
     await page.reload();

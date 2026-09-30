@@ -15,6 +15,12 @@
  */
 
 const PF_MEDICAO_ID = "G-EH9HLLYG13";
+
+/* Container do GTM. Ele NÃO deve conter tag de configuração do GA4: o GA4 já
+   é carregado aqui, e as duas coisas juntas contam cada page_view e cada
+   evento duas vezes — sem erro visível, só o número dobrado. O container
+   existe para pixels de anúncio e tags de terceiros. */
+const PF_GTM_ID = "GTM-PF2W5X4W";
 const PF_CHAVE_CONSENTIMENTO = "pf_consentimento";
 const PF_FILA_MAXIMA = 50;
 
@@ -24,6 +30,7 @@ const GA_LIMITE_VALOR = 100;
 
 let pfFila = [];
 let pfGtagCarregado = false;
+let pfGtmCarregado = false;
 
 /* localStorage falha em navegação anônima e com cookies bloqueados. Nunca
    deixar isso derrubar a página, e tratar a falha como "ainda não decidiu". */
@@ -56,6 +63,30 @@ function pfCarregarGtag() {
   s.async = true;
   s.src = "https://www.googletagmanager.com/gtag/js?id=" + PF_MEDICAO_ID;
   document.head.appendChild(s);
+}
+
+/* Mesmo snippet que o painel do GTM entrega, só que atrás do consentimento.
+   O <noscript> com iframe do snippet oficial foi deixado de fora de propósito:
+   ele serve para navegador sem JavaScript, e sem JavaScript não existe home,
+   busca nem Escolher — não mediria nada de útil, e um iframe não pode ficar
+   atrás do banner. */
+function pfCarregarGtm() {
+  if (pfGtmCarregado) return;
+  pfGtmCarregado = true;
+
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = "https://www.googletagmanager.com/gtm.js?id=" + PF_GTM_ID;
+  document.head.appendChild(s);
+}
+
+/* GA4 e GTM compartilham o mesmo window.dataLayer, o que é esperado. */
+function pfCarregarMedicao() {
+  pfCarregarGtag();
+  pfCarregarGtm();
 }
 
 /* Corta valores longos e descarta o que parecer identificável. O campo de
@@ -92,7 +123,7 @@ function pfTrack(evento, props = {}) {
   if (decisao === "recusado") return;
 
   if (decisao === "aceito") {
-    pfCarregarGtag();
+    pfCarregarMedicao();
     pfEnviar(evento, limpos);
     return;
   }
@@ -113,7 +144,7 @@ function pfDecidir(valor) {
   if (banner) banner.remove();
 
   if (valor === "aceito") {
-    pfCarregarGtag();
+    pfCarregarMedicao();
     pfEsvaziarFila();
   } else {
     pfFila = [];
@@ -148,7 +179,7 @@ function pfConsentimentoRefazer() {
 function initAnalytics() {
   const decisao = pfLerConsentimento();
   if (decisao === "aceito") {
-    pfCarregarGtag();
+    pfCarregarMedicao();
     pfEsvaziarFila();
     return;
   }
