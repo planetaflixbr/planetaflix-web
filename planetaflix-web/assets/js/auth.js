@@ -149,6 +149,65 @@ async function submitAvaliacao(uid, perfil, titulo, stars, comentario) {
   });
 }
 
+/*
+ * Exclusão de conta (direito de eliminação, LGPD art. 18).
+ *
+ * A ordem importa: os dados no Firestore primeiro, a conta de autenticação
+ * por último. Apagar a autenticação antes derrubaria a permissão de escrita
+ * e deixaria os dados órfãos, sem ninguém que possa apagá-los depois.
+ *
+ * O contador de sócios NÃO é decrementado de propósito: ele é sequencial, e
+ * reduzi-lo faria o próximo cadastro receber um número já usado — duas
+ * carteirinhas com o mesmo número. O número sai de circulação com a conta.
+ */
+
+/* O Firestore aceita no máximo 500 operações por lote. */
+const LOTE_MAXIMO = 450;
+
+async function apagarEmLotes(docs) {
+  for (let i = 0; i < docs.length; i += LOTE_MAXIMO) {
+    const lote = fbDb.batch();
+    docs.slice(i, i + LOTE_MAXIMO).forEach((d) => lote.delete(d.ref));
+    await lote.commit();
+  }
+}
+
+/* Apaga tudo que o usuário produziu, menos a conta em si. */
+async function apagarDadosDoUsuario(uid) {
+  const favoritos = await fbDb.collection("users").doc(uid).collection("favoritos").get();
+  await apagarEmLotes(favoritos.docs);
+
+  const avaliacoes = await fbDb.collection("avaliacoes").where("uid", "==", uid).get();
+  await apagarEmLotes(avaliacoes.docs);
+
+  await fbDb.collection("users").doc(uid).delete();
+
+  return { favoritos: favoritos.size, avaliacoes: avaliacoes.size };
+}
+
+/*
+ * O Firebase exige login recente para apagar a conta: se a sessão for antiga,
+ * user.delete() responde auth/requires-recent-login. Nesse caso reautentica
+ * com o Google e tenta de novo — uma vez só, para não entrar em laço.
+ */
+async function apagarConta(user) {
+  const resumo = await apagarDadosDoUsuario(user.uid);
+
+  try {
+    await user.delete();
+  } catch (err) {
+    if (err && err.code === "auth/requires-recent-login") {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await user.reauthenticateWithPopup(provider);
+      await user.delete();
+    } else {
+      throw err;
+    }
+  }
+
+  return resumo;
+}
+
 /* Todas as avaliações de um título. Ordenadas no cliente (não no Firestore)
    para não depender de um índice composto — a query usa só filtros de
    igualdade, que o Firestore indexa automaticamente. */

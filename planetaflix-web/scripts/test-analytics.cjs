@@ -127,6 +127,10 @@ const lerEventos = (page) => page.evaluate(() => {
 
 const ok = (cond, msg) => ({ passou: !!cond, msg });
 
+const lerOrdem = (page) => page.evaluate(() => {
+  try { return JSON.parse(sessionStorage.getItem("__ordem") || "[]"); } catch (e) { return []; }
+});
+
 (async () => {
   await new Promise((r) => server.listen(PORTA, r));
   const browser = await chromium.launch(
@@ -276,9 +280,9 @@ const ok = (cond, msg) => ({ passou: !!cond, msg });
     await page.waitForTimeout(1200);
     const ver = (await lerEventos(page)).find((e) => e.evento === "escolha_ver_opcoes");
     res.push(ok(ver && typeof ver.props.providers_qtd === "number",
-      `escolha_ver_opcoes manda providers_qtd como número (props: ${ver && JSON.stringify(ver.props)})`));
+      `escolha_ver_opcoes manda providers_qtd como numero (props: ${ver && JSON.stringify(ver.props)})`));
     res.push(ok(ver && !("providers" in ver.props),
-      "a lista concatenada de streamings não é mais enviada"));
+      "a lista concatenada de streamings nao e mais enviada"));
     res.push(ok(ver && typeof ver.props.mediaType === "string",
       "os outros filtros continuam indo (mediaType)"));
     errosTodos.push(...erros);
@@ -363,6 +367,128 @@ const ok = (cond, msg) => ({ passou: !!cond, msg });
     res.push(ok(m && m.dentro, `banner cabe em 390px (${m && JSON.stringify(m)})`));
     res.push(ok(m && m.alturaBotoes.every((h) => h >= 40), `botões com 40px+ de altura (${m && m.alturaBotoes})`));
     res.push(ok(m && m.scrollH <= m.janela, "sem rolagem horizontal em 390px"));
+    await ctx.close();
+  }
+
+
+  // ---------- 11) EXCLUSAO DE CONTA ----------
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1100, height: 900 } });
+    const page = await ctx.newPage();
+    const erros = [];
+    page.on("pageerror", (e) => erros.push("PAGEERROR: " + e.message));
+
+    await page.addInitScript(() => {
+      try { localStorage.setItem("pf_consentimento", "aceito"); } catch (e) {}
+    });
+    await page.route("**googletagmanager.com/**", (r) =>
+      r.fulfill({ status: 200, contentType: "text/javascript", body: "" }));
+    await page.route("**qrserver.com/**", (r) => r.fulfill({ status: 200, body: "" }));
+    await page.route("**gstatic.com/firebasejs/**", (r) =>
+      r.fulfill({ status: 200, contentType: "text/javascript", body: "window.firebase={};" }));
+    await page.route("**/assets/js/firebase-config.js", (r) =>
+      r.fulfill({ status: 200, contentType: "text/javascript", body: "window.fbDb={};window.fbAuth={};" }));
+
+    /* Firestore de mentira que registra a ordem exata das operacoes. */
+    await page.route("**/assets/js/auth.js", async (route) => {
+      const real = await route.fetch();
+      const fonte = await real.text();
+      const dubles = `
+/* sessionStorage porque a pagina navega no fim e leva junto qualquer
+   variavel de window. */
+window.__reg = (x) => {
+  const a = JSON.parse(sessionStorage.getItem("__ordem") || "[]");
+  a.push(x);
+  sessionStorage.setItem("__ordem", JSON.stringify(a));
+};
+sessionStorage.removeItem("__ordem");
+window.__usuario = {
+  uid: "u1", displayName: "Teste", photoURL: "",
+  delete: async () => { window.__reg("auth.delete"); },
+};
+/* embrulha o pfTrack para registrar o evento no mesmo lugar */
+const __track = window.pfTrack;
+window.pfTrack = function (e, props) {
+  window.__reg("track:" + e + ":" + JSON.stringify(props || {}));
+  return __track.apply(null, arguments);
+};
+const favs = [{ ref: { id: "f1" } }, { ref: { id: "f2" } }, { ref: { id: "f3" } }];
+const avs  = [{ ref: { id: "a1" } }];
+window.fbDb = {
+  batch: () => {
+    const ops = [];
+    return {
+      delete: (ref) => ops.push(ref.id),
+      commit: async () => { window.__reg("lote:" + ops.join(",")); },
+    };
+  },
+  collection: (nome) => ({
+    doc: (id) => ({
+      collection: () => ({ get: async () => ({ docs: favs, size: favs.length }) }),
+      delete: async () => { window.__reg("perfil.delete"); },
+    }),
+    where: () => ({ get: async () => ({ docs: avs, size: avs.length }) }),
+  }),
+};
+function authOnStateChanged(cb) { cb(window.__usuario); }
+async function authSignOut() {}
+async function getUserProfile() {
+  return { nome: "Teste", avatar: "\u{1F3AC}", generosFavoritos: ["Drama"], memberNumber: 7, memberSince: null, onboardingComplete: true };
+}
+function formatarMemberSince() { return "setembro de 2026"; }
+`;
+      /* apagarConta e apagarDadosDoUsuario continuam os reais - e o que se
+         quer testar. Os dubles vem depois no mesmo script: declaracao de
+         funcao repetida, a ultima vence, sem precisar recortar o original. */
+      route.fulfill({ status: 200, contentType: "text/javascript", body: fonte + dubles });
+    });
+
+    let redirecionou = false;
+    await page.route(`${base}/index.html`, (r) => {
+      redirecionou = true;
+      /* Uma home falsa na MESMA origem: abortar a navegacao descarta o
+         contexto e leva o sessionStorage junto; navegar de verdade o
+         preserva, e e nele que o teste registrou o que aconteceu. */
+      r.fulfill({ status: 200, contentType: "text/html", body: "<!doctype html><title>home</title>" });
+    });
+
+    await page.goto(`${base}/carteirinha.html`);
+    await page.waitForTimeout(700);
+
+    res.push(ok(await page.isVisible("#btn-apagar"), "carteirinha tem o botao de apagar conta"));
+    res.push(ok(!(await page.isVisible("#apagar-painel")),
+      "o painel de confirmacao comeca escondido - um clique nao apaga nada"));
+
+    await page.click("#btn-apagar");
+    await page.waitForTimeout(200);
+    res.push(ok(await page.isVisible("#apagar-painel"), "o primeiro clique so abre a confirmacao"));
+    res.push(ok((await lerOrdem(page)).length === 0, "abrir a confirmacao nao apaga nada ainda"));
+
+    await page.click("#btn-apagar-cancelar");
+    await page.waitForTimeout(200);
+    res.push(ok(!(await page.isVisible("#apagar-painel")), "cancelar fecha o painel"));
+    res.push(ok((await lerOrdem(page)).length === 0, "cancelar nao apaga nada"));
+
+    await page.click("#btn-apagar");
+    await page.waitForTimeout(150);
+    await page.click("#btn-apagar-confirmar");
+    await page.waitForTimeout(900);
+
+    const registro = await lerOrdem(page);
+    const ordem = registro.filter((x) => !x.startsWith("track:"));
+    res.push(ok(JSON.stringify(ordem) === JSON.stringify(["lote:f1,f2,f3", "lote:a1", "perfil.delete", "auth.delete"]),
+      `ordem: favoritos, avaliacoes, perfil e so entao a conta (veio ${JSON.stringify(ordem)})`));
+    res.push(ok(ordem.length > 0 && ordem[ordem.length - 1] === "auth.delete",
+      "a autenticacao e a ultima - apaga-la antes deixaria os dados orfaos"));
+    res.push(ok(redirecionou, "depois de apagar, manda a pessoa para a home"));
+
+    const linhaEvento = registro.find((x) => x.startsWith("track:conta_excluida:"));
+    res.push(ok(!!linhaEvento, `dispara conta_excluida (registro: ${JSON.stringify(registro)})`));
+    const propsEvento = linhaEvento ? JSON.parse(linhaEvento.slice("track:conta_excluida:".length)) : {};
+    res.push(ok(propsEvento.favoritos === 3 && propsEvento.avaliacoes === 1,
+      `conta_excluida conta o que foi apagado (veio ${JSON.stringify(propsEvento)})`));
+
+    errosTodos.push(...erros);
     await ctx.close();
   }
 

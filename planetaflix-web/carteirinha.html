@@ -56,6 +56,26 @@
   .action-btn.logout{background:transparent;color:var(--muted);border:1px solid #dfe7e6;}
   .wallet-note{font-size:11px;color:var(--muted);text-align:center;margin-top:-4px;}
 
+  /* Exclusão de conta: discreta até ser pedida, e vermelha só no passo que
+     confirma — o primeiro botão ainda não apaga nada. */
+  .action-btn.apagar{background:transparent;color:#a6342c;border:1px solid #e6cfcd;}
+  .action-btn.apagar:hover{background:#fdf4f3;border-color:#a6342c;}
+  #btn-apagar-confirmar{background:#a6342c;color:#fff;border-color:#a6342c;}
+  #btn-apagar-confirmar:hover{background:#8b2b24;}
+  #btn-apagar-confirmar:disabled{opacity:.6;cursor:progress;}
+  .apagar-painel{
+    margin-top:4px;padding:16px;border-radius:14px;
+    background:#fdf4f3;border:1px solid #e6cfcd;
+  }
+  .apagar-painel p{margin:0 0 8px;font-size:12.5px;line-height:1.5;color:var(--texto);}
+  .apagar-painel p:last-of-type{color:var(--muted);}
+  .apagar-botoes{display:flex;gap:10px;margin-top:14px;}
+  .apagar-botoes .action-btn{flex:1;}
+  .apagar-erro{
+    margin:10px 0 0;padding:10px 12px;border-radius:10px;
+    background:#fff;border:1px solid #e6cfcd;color:#a6342c;font-size:12.5px;line-height:1.45;
+  }
+
   .loading-box{text-align:center;padding:60px 20px;color:var(--muted);}
 </style>
 </head>
@@ -114,6 +134,22 @@
       <div class="wallet-note">Em breve — aguardando o cadastro do Planeta Flix como emissor no Google Wallet.</div>
       <button class="action-btn share" id="btn-share">🔗 Compartilhar</button>
       <button class="action-btn logout" id="btn-logout">Sair da conta</button>
+
+      <!-- Exclusão de conta (LGPD art. 18, direito de eliminação). A confirmação
+           é um painel embutido, não um confirm() do navegador: a ação é
+           irreversível e merece um segundo passo deliberado. -->
+      <button class="action-btn apagar" id="btn-apagar">Apagar minha conta</button>
+
+      <div class="apagar-painel" id="apagar-painel" hidden>
+        <p><strong>Isto não pode ser desfeito.</strong></p>
+        <p>Serão apagados: seu perfil, sua carteirinha, seus favoritos e suas
+           avaliações. Seu número de sócio sai de circulação e não é reaproveitado.</p>
+        <div class="apagar-erro" id="apagar-erro" hidden></div>
+        <div class="apagar-botoes">
+          <button type="button" class="action-btn" id="btn-apagar-cancelar">Cancelar</button>
+          <button type="button" class="action-btn apagar" id="btn-apagar-confirmar">Sim, apagar tudo</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -189,7 +225,48 @@
 
     loadingBox.style.display = "none";
     cardContent.style.display = "block";
+
+    ligarExclusao(user);
   });
+
+  function ligarExclusao(user) {
+    const painel = document.getElementById("apagar-painel");
+    const erro = document.getElementById("apagar-erro");
+    const confirmar = document.getElementById("btn-apagar-confirmar");
+
+    document.getElementById("btn-apagar").addEventListener("click", () => {
+      painel.hidden = false;
+      erro.hidden = true;
+      confirmar.focus();
+    });
+
+    document.getElementById("btn-apagar-cancelar").addEventListener("click", () => {
+      painel.hidden = true;
+    });
+
+    confirmar.addEventListener("click", async () => {
+      confirmar.disabled = true;
+      confirmar.textContent = "Apagando…";
+      erro.hidden = true;
+      try {
+        const resumo = await apagarConta(user);
+        pfTrack("conta_excluida", {
+          favoritos: resumo.favoritos,
+          avaliacoes: resumo.avaliacoes,
+        });
+        window.location.href = "index.html";
+      } catch (err) {
+        console.error(err);
+        confirmar.disabled = false;
+        confirmar.textContent = "Sim, apagar tudo";
+        erro.textContent =
+          err && err.code === "auth/popup-closed-by-user"
+            ? "A confirmação com o Google foi fechada. Tente de novo."
+            : "Não foi possível apagar a conta agora. Tente de novo ou escreva para planetaflixbr@gmail.com.";
+        erro.hidden = false;
+      }
+    });
+  }
 })();
 </script>
 </body>
