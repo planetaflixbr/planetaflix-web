@@ -269,6 +269,22 @@ const ok = (cond, msg) => ({ passou: !!cond, msg });
     await ctx.close();
   }
 
+  // ---------- 6b) ESCOLHER: a lista de streamings virou quantidade ----------
+  {
+    const { ctx, page, erros } = await novaPagina(browser, { consentimento: "aceito" });
+    await page.goto(`${base}/descobrir.html`);
+    await page.waitForTimeout(1200);
+    const ver = (await lerEventos(page)).find((e) => e.evento === "escolha_ver_opcoes");
+    res.push(ok(ver && typeof ver.props.providers_qtd === "number",
+      `escolha_ver_opcoes manda providers_qtd como número (props: ${ver && JSON.stringify(ver.props)})`));
+    res.push(ok(ver && !("providers" in ver.props),
+      "a lista concatenada de streamings não é mais enviada"));
+    res.push(ok(ver && typeof ver.props.mediaType === "string",
+      "os outros filtros continuam indo (mediaType)"));
+    errosTodos.push(...erros);
+    await ctx.close();
+  }
+
   // ---------- 7) ESCOLHER: os links da home levam o parâmetro ----------
   {
     const { ctx, page } = await novaPagina(browser, { consentimento: "aceito" });

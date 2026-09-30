@@ -136,7 +136,7 @@ function renderVazio() {
       Nada bateu com esses filtros.<br>
       Tente tirar a nota mínima, aumentar o tempo ou marcar mais um serviço.
     </div>`;
-  pfTrack("escolha_sem_resultado", { ...filtros });
+  pfTrack("escolha_sem_resultado", filtrosParaMedicao());
 }
 
 function renderLista(resultados, total) {
@@ -180,12 +180,24 @@ function renderSorteio(t) {
 function ligarCliquesDeResultado(origem) {
   document.querySelectorAll("[data-resultado]").forEach(el => {
     el.addEventListener("click", () => {
-      pfTrack("escolha_clique_titulo", { origem, title_id: el.dataset.resultado, ...filtros });
+      pfTrack("escolha_clique_titulo", { origem, title_id: el.dataset.resultado, ...filtrosParaMedicao() });
     });
   });
 }
 
 /* ---------- Ações ---------- */
+
+/* filtros.providers é uma lista, e o GA4 só aceita valor simples: ela
+   chegaria como "8,119,337" e cada combinação de serviços viraria um rótulo
+   distinto — centenas de valores únicos em vez de algo que dê para analisar.
+   Manda a quantidade, que é o que se soma e se compara.
+
+   Quais serviços a pessoa usa já vem de escolha_filtro_servico, que dispara
+   um evento por toque, com provider_id e marcado. */
+function filtrosParaMedicao() {
+  const { providers, ...resto } = filtros;
+  return { ...resto, providers_qtd: providers.length };
+}
 
 function lerFiltrosDaTela() {
   filtros.genre = document.getElementById("filtro-genero").value;
@@ -199,7 +211,7 @@ async function verOpcoes() {
   buscando = true;
   lerFiltrosDaTela();
   renderCarregando("Procurando o que combina…");
-  pfTrack("escolha_ver_opcoes", { ...filtros });
+  pfTrack("escolha_ver_opcoes", filtrosParaMedicao());
   try {
     const { results, totalResults } = await svcDiscover({ ...filtros, page: 1 });
     if (!results.length) renderVazio();
@@ -217,7 +229,7 @@ async function sortear() {
   buscando = true;
   lerFiltrosDaTela();
   renderCarregando("Sorteando…");
-  pfTrack("escolha_sorteio", { ...filtros });
+  pfTrack("escolha_sorteio", filtrosParaMedicao());
   try {
     const primeira = await svcDiscover({ ...filtros, page: 1 });
     if (!primeira.results.length) {
