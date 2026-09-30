@@ -24,15 +24,9 @@ const filtros = {
 let ultimoSorteado = null;   // evita sortear o mesmo título duas vezes seguidas
 let buscando = false;
 
-/* Stub de analytics (backlog B15). Hoje só registra no console; quando a
-   ferramenta de analytics entrar, basta trocar o corpo desta função. */
-function pfTrack(evento, props = {}) {
-  if (typeof window.pfAnalytics === "function") {
-    window.pfAnalytics(evento, props);
-    return;
-  }
-  console.log("[track]", evento, props);
-}
+/* pfTrack vem de analytics.js, carregado antes deste arquivo. O stub que
+   existia aqui foi removido quando o GA4 entrou (backlog B15): duas
+   declarações da mesma função em scripts clássicos e a última ganha. */
 
 /* localStorage pode falhar (navegação anônima, cookies bloqueados) — nunca
    deixar isso derrubar a tela. */
@@ -90,7 +84,7 @@ async function renderProviders() {
       else filtros.providers.push(id);
       btn.classList.toggle("on");
       salvarServicos(filtros.providers);
-      pfTrack("filtro_servico", { provider_id: id, marcado: i < 0 });
+      pfTrack("escolha_filtro_servico", { provider_id: id, marcado: i < 0 });
     });
   });
 }
@@ -270,7 +264,17 @@ async function trocarTipo(novoTipo) {
 
 /* ---------- Início ---------- */
 
+/* De onde a pessoa chegou. Os dois pontos de entrada carregam ?de= porque
+   medir o clique no link antes de navegar é frágil — a navegação pode matar
+   a requisição. O parâmetro sobrevive. */
+function origemDaEntrada() {
+  const de = new URLSearchParams(location.search).get("de");
+  return de === "nav" || de === "card" ? de : "direto";
+}
+
 async function initDescobrir() {
+  pfTrack("escolher_aberto", { origem: origemDaEntrada() });
+
   const banner = document.getElementById("demo-banner");
   if (banner && isDemoMode()) banner.classList.add("show");
 

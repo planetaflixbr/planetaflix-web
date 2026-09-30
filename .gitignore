@@ -14,6 +14,9 @@ studio/.env.local
 .DS_Store
 Thumbs.db
 
+# playwright do teste de medicao (instalado com npm i --no-save)
+planetaflix-web/node_modules/
+
 # gerados pelo build editorial (npm run build)
 planetaflix-web/artigo/
 planetaflix-web/artigos.html

@@ -131,7 +131,12 @@ function debounce(fn, delay) {
    sobrescrever um mais recente (condição de corrida entre requisições). */
 let searchToken = 0;
 
-async function runSearch(query) {
+/* Última consulta já medida. O debounce de 350ms chama runSearch a cada
+   tecla a partir de 3 caracteres: sem esta guarda, "duna" viraria quatro
+   eventos (dun, duna...) e o relatório contaria buscas que não existiram. */
+let ultimaBuscaMedida = "";
+
+async function runSearch(query, origem = "digitacao") {
   const blocosSection = document.getElementById("blocos-home");
   const resultsSection = document.getElementById("results-section");
   const resultsList = document.getElementById("results-list");
@@ -140,6 +145,7 @@ async function runSearch(query) {
   const myToken = ++searchToken;
 
   if (!query.trim()) {
+    ultimaBuscaMedida = "";
     blocosSection.style.display = "";
     resultsSection.style.display = "none";
     return;
@@ -152,6 +158,17 @@ async function runSearch(query) {
 
   const { titles, people } = await svcSearch(query);
   if (myToken !== searchToken) return; // uma busca mais recente já está em andamento
+
+  const termo = query.trim();
+  if (termo.toLowerCase() !== ultimaBuscaMedida) {
+    ultimaBuscaMedida = termo.toLowerCase();
+    pfTrack("search", {
+      search_term: termo,
+      resultados: titles.length,
+      pessoas: (people || []).length,
+      origem,
+    });
+  }
 
   const rows = [
     ...(people || []).slice(0, 4).map(personRowHtml),
@@ -178,7 +195,7 @@ function initHome() {
   const initialQ = params.get("q") || "";
   if (initialQ) {
     input.value = initialQ;
-    runSearch(initialQ);
+    runSearch(initialQ, "url");
   }
 
   form.addEventListener("submit", (e) => {
@@ -187,7 +204,7 @@ function initHome() {
     const url = new URL(location.href);
     if (q) url.searchParams.set("q", q); else url.searchParams.delete("q");
     history.replaceState(null, "", url.toString());
-    runSearch(q);
+    runSearch(q, "submit");
   });
 
   const debouncedSearch = debounce(() => {
